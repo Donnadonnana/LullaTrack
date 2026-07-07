@@ -15,3 +15,8 @@ yarn-debug.log*
 
 # OS files
 .DS_Store
+
+# firebase
+firebase.json
+backend/firebase.credentials.json
+backend/firebase-service-account.json
