@@ -1,5 +1,7 @@
 import { Link, Outlet } from "react-router-dom";
 
+// simple navigation layout for the app
+
 export default function MainLayout() {
   return (
     <div>
