@@ -1,19 +1,14 @@
-import { Link, Outlet } from "react-router-dom";
-
-// simple navigation layout for the app
+import { Outlet } from "react-router-dom";
+import Sidebar from "../components/Sidebar/Sidebar";
 
 export default function MainLayout() {
   return (
-    <div>
-      <nav>
-        <Link to="/">Dashboard</Link> |{" "}
-        <Link to="/sleep">Sleep</Link> |{" "}
-        <Link to="/feeding">Feeding</Link>
-      </nav>
+    <div className="layout">
+      <Sidebar />
 
-      <hr />
-
-      <Outlet />
+      <main className="content">
+        <Outlet />
+      </main>
     </div>
   );
 }

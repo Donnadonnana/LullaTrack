@@ -1,0 +1,32 @@
+.layout {
+    display: flex;
+    min-height: 100vh;
+  }
+  
+  .sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .active {
+    font-weight: 600;
+    color: #4f46e5;
+  }
+
+  .layout {
+    display: flex;
+    min-height: 100vh;
+  }
+  
+  .sidebar {
+    width: 240px;
+    border-right: 1px solid #e5e7eb;
+    padding: 24px;
+    background: white;
+  }
+  
+  .content {
+    flex: 1;
+    padding: 32px;
+  }
