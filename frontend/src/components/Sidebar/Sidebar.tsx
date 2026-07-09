@@ -1,37 +1,46 @@
 import { NavLink } from "react-router-dom";
-import { Home, Moon, Milk } from "lucide-react";
-import "./Sidebar.css";
+import {
+  Box,
+  Drawer,
+  List,
+  ListItemButton,
+  ListItemText,
+  Typography,
+} from "@mui/material";
+
+const drawerWidth = 240;
 
 export default function Sidebar() {
   return (
-    <aside className="sidebar">
-      <h2>LullaTrack</h2>
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: drawerWidth,
+        "& .MuiDrawer-paper": {
+          width: drawerWidth,
+          p: 2,
+        },
+      }}
+    >
+      <Typography variant="h5" component="h1" sx={{ fontWeight: 700, mb: 3 }}>
+        LullaTrack
+      </Typography>
 
-      <nav>
-        <NavLink
-          to="/"
-          className={({ isActive }) => (isActive ? "active" : "")}
-        >
-          <Home size={18} />
-          Dashboard
-        </NavLink>
+      <Box component="nav">
+        <List>
+          <ListItemButton component={NavLink} to="/">
+            <ListItemText primary="Dashboard" />
+          </ListItemButton>
 
-        <NavLink
-          to="/sleep"
-          className={({ isActive }) => (isActive ? "active" : "")}
-        >
-          <Moon size={18} />
-          Sleep
-        </NavLink>
+          <ListItemButton component={NavLink} to="/sleep">
+            <ListItemText primary="Sleep" />
+          </ListItemButton>
 
-        <NavLink
-          to="/feeding"
-          className={({ isActive }) => (isActive ? "active" : "")}
-        >
-          <Milk size={18} />
-          Feeding
-        </NavLink>
-      </nav>
-    </aside>
+          <ListItemButton component={NavLink} to="/feeding">
+            <ListItemText primary="Feeding" />
+          </ListItemButton>
+        </List>
+      </Box>
+    </Drawer>
   );
 }
