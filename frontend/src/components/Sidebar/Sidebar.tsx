@@ -18,11 +18,11 @@ export default function Sidebar() {
         width: drawerWidth,
         "& .MuiDrawer-paper": {
           width: drawerWidth,
-          p: 2,
+          p: 4,
         },
       }}
     >
-      <Typography variant="h5" component="h1" sx={{ fontWeight: 700, mb: 3 }}>
+      <Typography variant="h5" component="h1" sx={{ fontWeight: 700, m: 1 }}>
         LullaTrack
       </Typography>
 

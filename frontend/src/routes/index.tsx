@@ -14,14 +14,23 @@ export const router: any = createBrowserRouter([
       {
         index: true,
         element: <DashboardPage />,
+        handle: {
+          title: "Dashboard",
+        },
       },
       {
         path: "sleep",
         element: <SleepPage />,
+        handle: {
+          title: "Sleep",
+        },
       },
       {
         path: "feeding",
         element: <FeedingPage />,
+        handle: {
+          title: "Feeding",
+        },
       },
     ],
   },
