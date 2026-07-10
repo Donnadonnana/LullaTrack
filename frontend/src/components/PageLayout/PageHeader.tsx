@@ -6,12 +6,16 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import LightModeIcon from "@mui/icons-material/LightMode";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
+import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
+import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
+
 import { useMatches } from "react-router-dom";
+import { useAppDispatch } from "../../store/hooks";
+import { toggleTheme } from "../../store/slices/themeSlice";
 
 export default function PageHeader() {
   const theme = useTheme();
+  const dispatch = useAppDispatch();
 
   // Get current route
   const matches = useMatches();
@@ -21,12 +25,9 @@ export default function PageHeader() {
   const title =
     (currentMatch.handle as { title?: string })?.title ?? "Dashboard";
 
-  // Dummy data for now
+  // Dummy data for now, change to baby selector later
   const babyName = "Dylan";
-
-  const handleThemeToggle = () => {
-    console.log("toggle theme");
-  };
+  const isDarkMode = theme.palette.mode === "dark";
 
   return (
     <Box sx={{ px: 6, pt: 6 }}>
@@ -47,12 +48,13 @@ export default function PageHeader() {
             👶 {babyName}
           </Typography>
 
-          <IconButton onClick={handleThemeToggle}>
-            {theme.palette.mode === "dark" ? (
-              <LightModeIcon />
-            ) : (
-              <DarkModeIcon />
-            )}
+          <IconButton
+            onClick={() => dispatch(toggleTheme())}
+            aria-label={
+              isDarkMode ? "Switch to light mode" : "Switch to dark mode"
+            }
+          >
+            {isDarkMode ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
           </IconButton>
         </Stack>
       </Stack>
