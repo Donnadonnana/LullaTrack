@@ -8,7 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 
-const drawerWidth = 240;
+const drawerWidth = 280;
 
 export default function Sidebar() {
   return (
