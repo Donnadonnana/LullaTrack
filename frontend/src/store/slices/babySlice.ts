@@ -171,6 +171,17 @@ const babySlice = createSlice({
     ) => {
       state.activeBabyId = action.payload;
     },
+
+    clearBabyState: (state) => {
+        state.babies = [];
+        state.activeBabyId = null;
+      
+        state.onboarding = {
+          mode: "create",
+          step: 0,
+          draft: { ...emptyDraft },
+        };
+      },
   },
 });
 
@@ -181,6 +192,7 @@ export const {
   previousOnboardingStep,
   finishOnboarding,
   setActiveBaby,
+  clearBabyState
 } = babySlice.actions;
 
 export default babySlice.reducer;
