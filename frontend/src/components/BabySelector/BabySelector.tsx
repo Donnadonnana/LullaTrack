@@ -13,7 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import BabyChangingStationOutlinedIcon from "@mui/icons-material/BabyChangingStationOutlined";
+import ChildCare from "@mui/icons-material/ChildCare";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
@@ -129,7 +129,7 @@ export default function BabySelector() {
               bgcolor: activeBabyBackground,
             }}
           >
-            <BabyChangingStationOutlinedIcon sx={{ color: activeBabyColor }} />
+            <ChildCare sx={{ color: activeBabyColor }} />
           </Avatar>
 
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
@@ -214,7 +214,7 @@ export default function BabySelector() {
                     bgcolor: babyBackground,
                   }}
                 >
-                  <BabyChangingStationOutlinedIcon
+                  <ChildCare
                     fontSize="small"
                     sx={{ color: babyColor }}
                   />
