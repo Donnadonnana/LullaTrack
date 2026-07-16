@@ -9,7 +9,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import BabyChangingStationOutlinedIcon from "@mui/icons-material/BabyChangingStationOutlined";
+import ChildCare from "@mui/icons-material/ChildCare";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import BedtimeOutlinedIcon from "@mui/icons-material/BedtimeOutlined";
 import LocalDiningOutlinedIcon from "@mui/icons-material/LocalDiningOutlined";
@@ -30,6 +30,7 @@ export default function Sidebar() {
 
   const activeBaby = babies.find((baby) => baby.id === activeBabyId);
 
+
   const babyIconColor =
     activeBaby?.gender === "boy"
       ? "#76A9EA"
@@ -42,7 +43,7 @@ export default function Sidebar() {
     dispatch(clearBabyState());
     navigate("/login", { replace: true });
   };
-  
+
   const navItemStyles = {
     borderRadius: 3,
     mb: 1,
@@ -106,7 +107,7 @@ export default function Sidebar() {
                     : "rgba(232, 154, 183, 0.16)",
               }}
             >
-              <BabyChangingStationOutlinedIcon sx={{ color: babyIconColor }} />
+              <ChildCare sx={{ color: babyIconColor }} />
             </Avatar>
 
             <Box sx={{ minWidth: 0 }}>
