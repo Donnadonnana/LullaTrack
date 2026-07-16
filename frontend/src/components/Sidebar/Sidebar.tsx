@@ -18,6 +18,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { signOutUser } from "../../store/slices/authSlice";
+import { clearBabyState } from "../../store/slices/babySlice"
 
 const drawerWidth = 250;
 
@@ -38,9 +39,10 @@ export default function Sidebar() {
 
   const handleSignOut = () => {
     dispatch(signOutUser());
+    dispatch(clearBabyState());
     navigate("/login", { replace: true });
   };
-
+  
   const navItemStyles = {
     borderRadius: 3,
     mb: 1,
