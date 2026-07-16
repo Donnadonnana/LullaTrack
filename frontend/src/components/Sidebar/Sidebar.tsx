@@ -1,42 +1,29 @@
 import {
-  Avatar,
   Box,
   Divider,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Stack,
   Typography,
 } from "@mui/material";
-import ChildCare from "@mui/icons-material/ChildCare";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import BedtimeOutlinedIcon from "@mui/icons-material/BedtimeOutlined";
 import LocalDiningOutlinedIcon from "@mui/icons-material/LocalDiningOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import { NavLink, useNavigate } from "react-router-dom";
 
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { useAppDispatch } from "../../store/hooks";
 import { signOutUser } from "../../store/slices/authSlice";
-import { clearBabyState } from "../../store/slices/babySlice"
+import { clearBabyState } from "../../store/slices/babySlice";
+
+import BabySelector from "../BabySelector/BabySelector";
 
 const drawerWidth = 250;
 
 export default function Sidebar() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-
-  const { babies, activeBabyId } = useAppSelector((state) => state.babies);
-
-  const activeBaby = babies.find((baby) => baby.id === activeBabyId);
-
-
-  const babyIconColor =
-    activeBaby?.gender === "boy"
-      ? "#76A9EA"
-      : activeBaby?.gender === "girl"
-        ? "#E89AB7"
-        : "text.secondary";
 
   const handleSignOut = () => {
     dispatch(signOutUser());
@@ -87,49 +74,8 @@ export default function Sidebar() {
         LullaTrack
       </Typography>
 
-      <Box
-        sx={{
-          p: 2,
-          mb: 3,
-          borderRadius: 3,
-          bgcolor: "background.default",
-        }}
-      >
-        {activeBaby ? (
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-            <Avatar
-              sx={{
-                width: 44,
-                height: 44,
-                bgcolor:
-                  activeBaby.gender === "boy"
-                    ? "rgba(118, 169, 234, 0.16)"
-                    : "rgba(232, 154, 183, 0.16)",
-              }}
-            >
-              <ChildCare sx={{ color: babyIconColor }} />
-            </Avatar>
-
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }} noWrap>
-                {activeBaby.name}
-              </Typography>
-
-              <Typography variant="body2" color="text.secondary">
-                {activeBaby.ageMonths}{" "}
-                {activeBaby.ageMonths === 1 ? "month" : "months"} old
-              </Typography>
-            </Box>
-          </Stack>
-        ) : (
-          <Box>
-            <Typography sx={{ fontWeight: 700 }}>No baby selected</Typography>
-
-            <Typography variant="body2" color="text.secondary">
-              Complete onboarding to add a baby.
-            </Typography>
-          </Box>
-        )}
+      <Box sx={{ mb: 3 }}>
+        <BabySelector />
       </Box>
 
       <Divider sx={{ mb: 2 }} />
