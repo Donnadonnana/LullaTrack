@@ -23,10 +23,9 @@ import { useAppDispatch } from "../../store/hooks";
 import SleepTimeInput from "../SleepTimeInput/SleepTimeInput";
 
 import {
-  calculateDuration,
-  formatDuration,
-  formatTimeInput,
-} from "../../utils/time";
+    calculateDuration,
+    formatDuration,
+  } from "../../utils/time";
 
 type SleepCardProps = {
   log: SleepLog;
@@ -55,17 +54,7 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
       }),
     );
   };
-
-  const formatField = (
-    field: "onBedTime" | "asleepTime" | "wakeTime" | "pickupTime",
-  ) => {
-    if (!log[field]) {
-      return;
-    }
-
-    updateField(field, formatTimeInput(log[field]));
-  };
-
+  
   return (
     <Card
       variant="outlined"

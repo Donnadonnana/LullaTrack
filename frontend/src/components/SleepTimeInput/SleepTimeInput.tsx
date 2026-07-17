@@ -1,187 +1,280 @@
 import {
     Box,
-    TextField,
+    FormHelperText,
     Typography,
+    useTheme,
   } from "@mui/material";
-  import { useEffect, useState } from "react";
+  import {
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type ChangeEvent,
+    type FocusEvent,
+    type KeyboardEvent,
+  } from "react";
   
-  type SleepTimeInputProps = {
+  type TimeInputProps = {
     label: string;
     value: string;
     onChange: (value: string) => void;
+    error?: boolean;
+    helperText?: string;
+    disabled?: boolean;
+    required?: boolean;
   };
   
-  function splitTime(value: string): {
-    hours: string;
-    minutes: string;
-  } {
-    if (!value.includes(":")) {
-      return {
-        hours: "",
-        minutes: "",
-      };
-    }
-  
-    const [hours, minutes] = value.split(":");
-  
-    return {
-      hours: hours ?? "",
-      minutes: minutes ?? "",
-    };
+  function timeToDigits(value: string): string {
+    return value.replace(/\D/g, "").slice(0, 4);
   }
   
-  export default function SleepTimeInput({
+  function digitsToTime(digits: string): string {
+    if (!digits) {
+      return "";
+    }
+  
+    const hours = digits.slice(0, 2);
+    const minutes = digits.slice(2, 4);
+  
+    if (digits.length <= 2) {
+      return hours;
+    }
+  
+    return `${hours}:${minutes}`;
+  }
+  
+  function isValidCompleteTime(digits: string): boolean {
+    if (digits.length !== 4) {
+      return false;
+    }
+  
+    const hours = Number(digits.slice(0, 2));
+    const minutes = Number(digits.slice(2, 4));
+  
+    return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
+  }
+  
+  export default function TimeInput({
     label,
     value,
     onChange,
-  }: SleepTimeInputProps) {
-    const initialTime = splitTime(value);
+    error = false,
+    helperText,
+    disabled = false,
+    required = false,
+  }: TimeInputProps) {
+    const theme = useTheme();
+    const inputRef = useRef<HTMLInputElement>(null);
   
-    const [hours, setHours] = useState(initialTime.hours);
-    const [minutes, setMinutes] = useState(initialTime.minutes);
+    const [digits, setDigits] = useState(() => timeToDigits(value));
+    const [isFocused, setIsFocused] = useState(false);
+    const [internalError, setInternalError] = useState(false);
   
     useEffect(() => {
-      const nextTime = splitTime(value);
+      const incomingDigits = timeToDigits(value);
   
-      setHours(nextTime.hours);
-      setMinutes(nextTime.minutes);
+      if (incomingDigits !== digits) {
+        setDigits(incomingDigits);
+      }
     }, [value]);
   
-    const updateTime = (
-      nextHours: string,
-      nextMinutes: string,
-    ) => {
-      if (!nextHours && !nextMinutes) {
+    const hours = digits.slice(0, 2);
+    const minutes = digits.slice(2, 4);
+  
+    const displayedHours = hours.padEnd(2, "–");
+    const displayedMinutes = minutes.padEnd(2, "–");
+  
+    const hasError = error || internalError;
+  
+    const borderColor = useMemo(() => {
+      if (hasError) {
+        return theme.palette.error.main;
+      }
+  
+      if (isFocused) {
+        return theme.palette.primary.main;
+      }
+  
+      return theme.palette.divider;
+    }, [hasError, isFocused, theme]);
+  
+    const handleContainerClick = () => {
+      if (!disabled) {
+        inputRef.current?.focus();
+      }
+    };
+  
+    const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+      const nextDigits = timeToDigits(event.target.value);
+  
+      setDigits(nextDigits);
+      setInternalError(false);
+  
+      // Keep partial values local while typing.
+      if (nextDigits.length === 0) {
         onChange("");
         return;
       }
   
-      onChange(`${nextHours}:${nextMinutes}`);
+      if (nextDigits.length === 4) {
+        if (isValidCompleteTime(nextDigits)) {
+          onChange(digitsToTime(nextDigits));
+        } else {
+          setInternalError(true);
+        }
+      }
     };
   
-    const handleHoursChange = (
-      event: React.ChangeEvent<HTMLInputElement>,
-    ) => {
-      const digits = event.target.value
-        .replace(/\D/g, "")
-        .slice(0, 2);
+    const handleBlur = (_event: FocusEvent<HTMLInputElement>) => {
+      setIsFocused(false);
   
-      if (digits && Number(digits) > 23) {
+      if (!digits) {
+        setInternalError(false);
+        onChange("");
         return;
       }
   
-      setHours(digits);
-      updateTime(digits, minutes);
-    };
-  
-    const handleMinutesChange = (
-      event: React.ChangeEvent<HTMLInputElement>,
-    ) => {
-      const digits = event.target.value
-        .replace(/\D/g, "")
-        .slice(0, 2);
-  
-      if (digits && Number(digits) > 59) {
+      if (digits.length !== 4 || !isValidCompleteTime(digits)) {
+        setInternalError(true);
         return;
       }
   
-      setMinutes(digits);
-      updateTime(hours, digits);
+      setInternalError(false);
+      onChange(digitsToTime(digits));
     };
   
-    const handleHoursBlur = () => {
-      if (!hours) {
-        return;
-      }
-  
-      const formattedHours = hours.padStart(2, "0");
-  
-      setHours(formattedHours);
-      updateTime(formattedHours, minutes);
+    const handleFocus = () => {
+      setIsFocused(true);
     };
   
-    const handleMinutesBlur = () => {
-      if (!minutes) {
-        return;
+    const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Escape") {
+        inputRef.current?.blur();
       }
-  
-      const formattedMinutes = minutes.padStart(2, "0");
-  
-      setMinutes(formattedMinutes);
-      updateTime(hours, formattedMinutes);
     };
   
     return (
       <Box>
         <Typography
+          component="label"
           variant="body2"
           sx={{
-            color: "text.secondary",
+            display: "block",
+            color: hasError ? "error.main" : "text.secondary",
             mb: 1,
           }}
         >
           {label}
+          {required ? " *" : ""}
         </Typography>
   
         <Box
+          onClick={handleContainerClick}
           sx={{
-            display: "flex",
+            position: "relative",
+            display: "inline-flex",
             alignItems: "center",
             gap: 1,
+            cursor: disabled ? "not-allowed" : "text",
+            opacity: disabled ? 0.6 : 1,
           }}
         >
-          <TextField
-            value={hours}
-            onChange={handleHoursChange}
-            onBlur={handleHoursBlur}
-            placeholder="11"
-            aria-label={`${label} hour`}
+          <Box
             sx={{
-              width: 76,
+              width: 72,
+              height: 56,
+              display: "grid",
+              placeItems: "center",
+              border: 1,
+              borderColor,
+              borderRadius: 2,
+              bgcolor: "background.paper",
+              transition: "border-color 150ms ease",
             }}
-            slotProps={{
-              htmlInput: {
-                inputMode: "numeric",
-                maxLength: 2,
-                style: {
-                  textAlign: "center",
-                  fontSize: "1.1rem",
-                },
-              },
-            }}
-          />
+          >
+            <Typography
+              sx={{
+                fontSize: "1.25rem",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                color: hours
+                  ? "text.primary"
+                  : "text.disabled",
+              }}
+            >
+              {displayedHours}
+            </Typography>
+          </Box>
   
           <Typography
             aria-hidden="true"
             sx={{
               fontSize: "1.5rem",
               fontWeight: 700,
+              color: "text.secondary",
             }}
           >
             :
           </Typography>
   
-          <TextField
-            value={minutes}
-            onChange={handleMinutesChange}
-            onBlur={handleMinutesBlur}
-            placeholder="30"
-            aria-label={`${label} minute`}
+          <Box
             sx={{
-              width: 76,
+              width: 72,
+              height: 56,
+              display: "grid",
+              placeItems: "center",
+              border: 1,
+              borderColor,
+              borderRadius: 2,
+              bgcolor: "background.paper",
+              transition: "border-color 150ms ease",
             }}
-            slotProps={{
-              htmlInput: {
-                inputMode: "numeric",
-                maxLength: 2,
-                style: {
-                  textAlign: "center",
-                  fontSize: "1.1rem",
-                },
-              },
+          >
+            <Typography
+              sx={{
+                fontSize: "1.25rem",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                color: minutes
+                  ? "text.primary"
+                  : "text.disabled",
+              }}
+            >
+              {displayedMinutes}
+            </Typography>
+          </Box>
+  
+          <input
+            ref={inputRef}
+            value={digits}
+            onChange={handleChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            disabled={disabled}
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={4}
+            aria-label={label}
+            aria-invalid={hasError}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              opacity: 0,
+              cursor: disabled ? "not-allowed" : "text",
             }}
           />
         </Box>
+  
+        {(helperText || internalError) && (
+          <FormHelperText error={hasError}>
+            {internalError
+              ? "Enter a valid time between 00:00 and 23:59."
+              : helperText}
+          </FormHelperText>
+        )}
       </Box>
     );
   }
