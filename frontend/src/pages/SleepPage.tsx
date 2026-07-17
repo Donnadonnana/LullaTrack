@@ -1,6 +1,5 @@
 import { Box, Button, Stack, Typography } from "@mui/material";
 
-import AddIcon from "@mui/icons-material/Add";
 import BedtimeOutlinedIcon from "@mui/icons-material/BedtimeOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
@@ -36,45 +35,41 @@ export default function SleepPage() {
       }),
     );
   };
+
   if (!activeBaby) {
     return <Typography>Select or add a baby before tracking sleep.</Typography>;
   }
 
   return (
     <Stack spacing={3}>
-      <Box
+      <Stack
+        direction={{
+          xs: "column",
+          sm: "row",
+        }}
+        spacing={2}
         sx={{
-          display: "flex",
           justifyContent: "flex-end",
         }}
       >
-        <Stack
-          direction={{
-            xs: "column",
-            sm: "row",
-          }}
-          spacing={2}
-          sx={{ justifyContent: "flex-end" }}
+        <Button
+          variant="contained"
+          size="large"
+          startIcon={<LightModeOutlinedIcon />}
+          onClick={() => handleAddSleep("nap")}
         >
-          <Button
-            variant="contained"
-            size="large"
-            startIcon={<LightModeOutlinedIcon />}
-            onClick={() => handleAddSleep("nap")}
-          >
-            Add nap
-          </Button>
+          Add nap
+        </Button>
 
-          <Button
-            variant="outlined"
-            size="large"
-            startIcon={<DarkModeOutlinedIcon />}
-            onClick={() => handleAddSleep("night")}
-          >
-            Add night sleep
-          </Button>
-        </Stack>
-      </Box>
+        <Button
+          variant="outlined"
+          size="large"
+          startIcon={<DarkModeOutlinedIcon />}
+          onClick={() => handleAddSleep("night")}
+        >
+          Add night sleep
+        </Button>
+      </Stack>
 
       {activeBabyLogs.length === 0 ? (
         <Box
@@ -130,18 +125,35 @@ export default function SleepPage() {
                   mt: 0.5,
                 }}
               >
-                Add {activeBaby.name}&apos;s first nap when you&apos;re ready.
+                Add {activeBaby.name}&apos;s first nap or night sleep.
               </Typography>
             </Box>
 
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<AddIcon />}
-              onClick={handleAddNap}
+            <Stack
+              direction={{
+                xs: "column",
+                sm: "row",
+              }}
+              spacing={2}
             >
-              Add first nap
-            </Button>
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<LightModeOutlinedIcon />}
+                onClick={() => handleAddSleep("nap")}
+              >
+                Add first nap
+              </Button>
+
+              <Button
+                variant="outlined"
+                size="large"
+                startIcon={<DarkModeOutlinedIcon />}
+                onClick={() => handleAddSleep("night")}
+              >
+                Add night sleep
+              </Button>
+            </Stack>
           </Stack>
         </Box>
       ) : (
@@ -150,17 +162,34 @@ export default function SleepPage() {
             <SleepCard key={log.id} log={log} babyName={activeBaby.name} />
           ))}
 
-          <Button
-            variant="outlined"
-            size="large"
-            startIcon={<AddIcon />}
-            onClick={handleAddNap}
+          <Stack
+            direction={{
+              xs: "column",
+              sm: "row",
+            }}
+            spacing={2}
             sx={{
               alignSelf: "flex-start",
             }}
           >
-            Add another nap
-          </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={<LightModeOutlinedIcon />}
+              onClick={() => handleAddSleep("nap")}
+            >
+              Add another nap
+            </Button>
+
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={<DarkModeOutlinedIcon />}
+              onClick={() => handleAddSleep("night")}
+            >
+              Add night sleep
+            </Button>
+          </Stack>
         </Stack>
       )}
     </Stack>
