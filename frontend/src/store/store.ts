@@ -4,6 +4,7 @@ import appReducer from "./slices/appSlice";
 import authReducer from "./slices/authSlice";
 import babyReducer from "./slices/babySlice";
 import themeReducer from "./slices/themeSlice";
+import sleepReducer from "./slices/sleepSlice";
 
 import {
   loadPersistedState,
@@ -18,6 +19,7 @@ export const store = configureStore({
     auth: authReducer,
     babies: babyReducer,
     theme: themeReducer,
+    sleep: sleepReducer
   },
 
   preloadedState: persistedState
