@@ -87,3 +87,14 @@ export function formatTimeInput(value: string): string {
   
     return `${hours} hr ${minutes} min`;
   }
+  
+
+  export function calculateWakeWindow(
+    previousPickupTime: string,
+    nextOnBedTime: string,
+  ): number | null {
+    return calculateDuration(
+      previousPickupTime,
+      nextOnBedTime,
+    );
+  }

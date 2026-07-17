@@ -8,6 +8,8 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { addSleepLog, type SleepType } from "../store/slices/sleepSlice";
 
 import SleepCard from "../components/SleepCard/SleepCard";
+import WakeWindow from "../components/WakeWindow/WakeWindow";
+import { calculateWakeWindow } from "../utils/time";
 
 export default function SleepPage() {
   const dispatch = useAppDispatch();
@@ -135,9 +137,23 @@ export default function SleepPage() {
         </Box>
       ) : (
         <Stack spacing={2}>
-          {activeBabyLogs.map((log) => (
-            <SleepCard key={log.id} log={log} babyName={activeBaby.name} />
-          ))}
+          {activeBabyLogs.map((log, index) => {
+            const previousLog = index > 0 ? activeBabyLogs[index - 1] : null;
+
+            const wakeWindow = previousLog
+              ? calculateWakeWindow(previousLog.pickupTime, log.asleepTime)
+              : null;
+
+            return (
+              <Box key={log.id}>
+                {wakeWindow !== null && (
+                  <WakeWindow durationMinutes={wakeWindow} />
+                )}
+
+                <SleepCard log={log} babyName={activeBaby.name} />
+              </Box>
+            );
+          })}
 
           <Stack
             direction={{

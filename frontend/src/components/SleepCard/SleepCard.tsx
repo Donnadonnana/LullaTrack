@@ -132,7 +132,7 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
               {sleepDuration !== null && (
                 <Chip
                   label={`${formatDuration(sleepDuration)} asleep`}
-                  color={isNap ? "warning" : "primary"}
+                  color="primary"
                   variant="outlined"
                 />
               )}
