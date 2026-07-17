@@ -14,24 +14,30 @@ export default function SleepPage() {
 
   const { babies, activeBabyId } = useAppSelector((state) => state.babies);
 
-  const logs = useAppSelector((state) => state.sleep.logs);
-
   const activeBaby = babies.find((baby) => baby.id === activeBabyId);
 
-  const activeBabyLogs = logs.filter((log) => log.babyId === activeBabyId);
+  const activeBabyLogs = useAppSelector((state) =>
+    state.sleep.logs.filter((log) => log.babyId === state.babies.activeBabyId),
+  );
+
+  const hasNightSleepLog = activeBabyLogs.some((log) => log.type === "night");
 
   const handleAddSleep = (type: SleepType) => {
     if (!activeBabyId) {
       return;
     }
 
-    const sleepCount = activeBabyLogs.filter((log) => log.type === type).length;
+    if (type === "night" && hasNightSleepLog) {
+      return;
+    }
+
+    const napCount = activeBabyLogs.filter((log) => log.type === "nap").length;
 
     dispatch(
       addSleepLog({
         babyId: activeBabyId,
         type,
-        sleepNumber: sleepCount + 1,
+        sleepNumber: type === "night" ? 1 : napCount + 1,
       }),
     );
   };
@@ -42,35 +48,6 @@ export default function SleepPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack
-        direction={{
-          xs: "column",
-          sm: "row",
-        }}
-        spacing={2}
-        sx={{
-          justifyContent: "flex-end",
-        }}
-      >
-        <Button
-          variant="contained"
-          size="large"
-          startIcon={<LightModeOutlinedIcon />}
-          onClick={() => handleAddSleep("nap")}
-        >
-          Add nap
-        </Button>
-
-        <Button
-          variant="outlined"
-          size="large"
-          startIcon={<DarkModeOutlinedIcon />}
-          onClick={() => handleAddSleep("night")}
-        >
-          Add night sleep
-        </Button>
-      </Stack>
-
       {activeBabyLogs.length === 0 ? (
         <Box
           sx={{
@@ -172,23 +149,27 @@ export default function SleepPage() {
               alignSelf: "flex-start",
             }}
           >
-            <Button
-              variant="outlined"
-              size="large"
-              startIcon={<LightModeOutlinedIcon />}
-              onClick={() => handleAddSleep("nap")}
-            >
-              Add another nap
-            </Button>
+            {!hasNightSleepLog && (
+              <Button
+                variant="outlined"
+                size="large"
+                startIcon={<LightModeOutlinedIcon />}
+                onClick={() => handleAddSleep("nap")}
+              >
+                Add another nap
+              </Button>
+            )}
 
-            <Button
-              variant="outlined"
-              size="large"
-              startIcon={<DarkModeOutlinedIcon />}
-              onClick={() => handleAddSleep("night")}
-            >
-              Add night sleep
-            </Button>
+            {!hasNightSleepLog && (
+              <Button
+                variant="outlined"
+                size="large"
+                startIcon={<DarkModeOutlinedIcon />}
+                onClick={() => handleAddSleep("night")}
+              >
+                Add night sleep
+              </Button>
+            )}
           </Stack>
         </Stack>
       )}

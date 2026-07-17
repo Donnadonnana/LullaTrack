@@ -42,7 +42,7 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
 
   const sleepTitle = isNap
     ? `Nap ${log.sleepNumber}`
-    : `Night Sleep ${log.sleepNumber}`;
+    : `Night Sleep`;
 
   const updateField = (field: keyof SleepLog, value: string) => {
     dispatch(
@@ -94,7 +94,7 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                   {isNap ? (
                     <LightModeOutlinedIcon
                       sx={{
-                        color: "warning.main",
+                        color: "orange",
                       }}
                     />
                   ) : (
