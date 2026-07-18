@@ -123,7 +123,7 @@ export default function DateNavigator({ value, onChange }: DateNavigatorProps) {
           </Stack>
         </Box>
 
-        <IconButton onClick={handleNextDay} aria-label="Next day">
+        <IconButton onClick={handleNextDay} aria-label="Next day" disabled={isToday}>
           <ChevronRightOutlinedIcon />
         </IconButton>
       </Stack>
@@ -150,7 +150,11 @@ export default function DateNavigator({ value, onChange }: DateNavigatorProps) {
           },
         }}
       >
-        <DateCalendar value={selectedDate} onChange={handleDateChange} />
+        <DateCalendar
+          value={selectedDate}
+          onChange={handleDateChange}
+          disableFuture
+        />
       </Popover>
     </>
   );
