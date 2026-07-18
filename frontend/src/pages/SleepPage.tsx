@@ -63,38 +63,6 @@ export default function SleepPage() {
   return (
     <Stack spacing={3}>
       <DateNavigator value={selectedDate} onChange={setSelectedDate} />
-
-      <Stack
-        direction={{
-          xs: "column",
-          sm: "row",
-        }}
-        spacing={2}
-        sx={{
-          justifyContent: "flex-end",
-        }}
-      >
-        <Button
-          variant="contained"
-          size="large"
-          startIcon={<LightModeOutlinedIcon />}
-          onClick={() => handleAddSleep("nap")}
-        >
-          Add nap
-        </Button>
-
-        {!hasNightSleepLog && (
-          <Button
-            variant="outlined"
-            size="large"
-            startIcon={<DarkModeOutlinedIcon />}
-            onClick={() => handleAddSleep("night")}
-          >
-            Add night sleep
-          </Button>
-        )}
-      </Stack>
-
       {activeBabyLogs.length === 0 ? (
         <Box
           sx={{
@@ -210,14 +178,16 @@ export default function SleepPage() {
               alignSelf: "flex-start",
             }}
           >
-            <Button
-              variant="outlined"
-              size="large"
-              startIcon={<LightModeOutlinedIcon />}
-              onClick={() => handleAddSleep("nap")}
-            >
-              Add another nap
-            </Button>
+            {!hasNightSleepLog && (
+              <Button
+                variant="outlined"
+                size="large"
+                startIcon={<LightModeOutlinedIcon />}
+                onClick={() => handleAddSleep("nap")}
+              >
+                Add another nap
+              </Button>
+            )}
 
             {!hasNightSleepLog && (
               <Button
