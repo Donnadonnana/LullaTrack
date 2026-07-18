@@ -5,6 +5,8 @@ export type SleepType = "nap" | "night";
 export type SleepLog = {
   id: string;
   babyId: string;
+  date: string; // YYYY-MM-DD
+
   type: SleepType;
   sleepNumber: number;
 
@@ -12,7 +14,6 @@ export type SleepLog = {
   asleepTime: string;
   wakeTime: string;
   pickupTime: string;
-
   notes: string;
 };
 
@@ -32,6 +33,7 @@ const sleepSlice = createSlice({
       state,
       action: PayloadAction<{
         babyId: string;
+        date: string;
         type: SleepType;
         sleepNumber: number;
       }>,
@@ -39,6 +41,7 @@ const sleepSlice = createSlice({
       state.logs.push({
         id: crypto.randomUUID(),
         babyId: action.payload.babyId,
+        date: action.payload.date,
         type: action.payload.type,
         sleepNumber: action.payload.sleepNumber,
 
@@ -49,7 +52,7 @@ const sleepSlice = createSlice({
         notes: "",
       });
     },
-
+    
     updateSleepLog: (
       state,
       action: PayloadAction<{
@@ -57,30 +60,20 @@ const sleepSlice = createSlice({
         changes: Partial<Omit<SleepLog, "id">>;
       }>,
     ) => {
-      const log = state.logs.find(
-        (item) => item.id === action.payload.id,
-      );
+      const log = state.logs.find((item) => item.id === action.payload.id);
 
       if (log) {
         Object.assign(log, action.payload.changes);
       }
     },
 
-    removeSleepLog: (
-      state,
-      action: PayloadAction<string>,
-    ) => {
-      state.logs = state.logs.filter(
-        (log) => log.id !== action.payload,
-      );
+    removeSleepLog: (state, action: PayloadAction<string>) => {
+      state.logs = state.logs.filter((log) => log.id !== action.payload);
     },
   },
 });
 
-export const {
-  addSleepLog,
-  updateSleepLog,
-  removeSleepLog,
-} = sleepSlice.actions;
+export const { addSleepLog, updateSleepLog, removeSleepLog } =
+  sleepSlice.actions;
 
 export default sleepSlice.reducer;

@@ -11,18 +11,28 @@ import SleepCard from "../components/SleepCard/SleepCard";
 import WakeWindow from "../components/WakeWindow/WakeWindow";
 import { calculateWakeWindow } from "../utils/time";
 
+import { useState } from "react";
+import dayjs from "dayjs";
+
+import DateNavigator from "../components/DateNavigator/DateNavigator";
+
 export default function SleepPage() {
   const dispatch = useAppDispatch();
+  const [selectedDate, setSelectedDate] = useState(
+    dayjs().format("YYYY-MM-DD"),
+  );
 
   const { babies, activeBabyId } = useAppSelector((state) => state.babies);
 
   const activeBaby = babies.find((baby) => baby.id === activeBabyId);
 
   const activeBabyLogs = useAppSelector((state) =>
-    state.sleep.logs.filter((log) => log.babyId === state.babies.activeBabyId),
+    state.sleep.logs.filter((log) => log.babyId === state.babies.activeBabyId && log.date === selectedDate),
   );
 
-  const hasNightSleepLog = activeBabyLogs.some((log) => log.type === "night");
+  const hasNightSleepLog = activeBabyLogs.some(
+    (log) => log.type === "night",
+  );
 
   const handleAddSleep = (type: SleepType) => {
     if (!activeBabyId) {
@@ -35,20 +45,36 @@ export default function SleepPage() {
 
     const napCount = activeBabyLogs.filter((log) => log.type === "nap").length;
 
-    dispatch(
-      addSleepLog({
-        babyId: activeBabyId,
-        type,
-        sleepNumber: type === "night" ? 1 : napCount + 1,
-      }),
-    );
-  };
+    const handleAddSleep = (type: SleepType) => {
+        if (!activeBabyId) {
+          return;
+        }
+      
+        if (type === "night" && hasNightSleepLog) {
+          return;
+        }
+      
+        const napCount = activeBabyLogs.filter(
+          (log) => log.type === "nap",
+        ).length;
+      
+        dispatch(
+          addSleepLog({
+            babyId: activeBabyId,
+            date: selectedDate,
+            type,
+            sleepNumber:
+              type === "night" ? 1 : napCount + 1,
+          }),
+        );
+      };
 
   if (!activeBaby) {
     return <Typography>Select or add a baby before tracking sleep.</Typography>;
   }
 
   return (
+    
     <Stack spacing={3}>
       {activeBabyLogs.length === 0 ? (
         <Box
