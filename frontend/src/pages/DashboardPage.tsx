@@ -1,57 +1,52 @@
-import { Button, Stack, Typography } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { Box, Stack, Typography } from "@mui/material";
 
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { startOnboarding } from "../store/slices/babySlice";
+import dayjs from "dayjs";
+
+import { useAppSelector } from "../store/hooks";
+import { useState } from "react";
+
+import SleepReportCard from "../components/SleepReportCard/SleepReportCard";
+import FeedingReportCard from "../components/FeedingReportCard/FeedingReportCard";
+import WeeklyOverview from "../components/WeeklyOverview/WeeklyOverview";
+import DateNavigator from "../components/DateNavigator/DateNavigator";
+
+import {
+  dummyFeedingReport,
+  dummySleepReport,
+  dummyWeeklyReport,
+} from "../data/dashboardDummyData";
 
 export default function DashboardPage() {
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-
-  const { babies, activeBabyId } = useAppSelector(
-    (state) => state.babies
+  const { babies, activeBabyId } = useAppSelector((state) => state.babies);
+  const [selectedDate, setSelectedDate] = useState(
+    dayjs().format("YYYY-MM-DD"),
   );
 
-  const activeBaby = babies.find(
-    (baby) => baby.id === activeBabyId
-  );
+  const activeBaby = babies.find((baby) => baby.id === activeBabyId);
 
-  const openOnboarding = (
-    mode: "add" | "restart"
-  ) => {
-    dispatch(startOnboarding(mode));
-    navigate("/onboarding");
-  };
+  if (!activeBaby) {
+    return <Typography>Select or add a baby to view the dashboard.</Typography>;
+  }
 
-  // TODO: temp buttons to test onboarding 
   return (
-    <Stack spacing={3}>
-      <Typography variant="h5">
-        Welcome to {activeBaby?.name ?? "LullaTrack"}
-      </Typography>
+    <Stack spacing={6}>
+      <DateNavigator value={selectedDate} onChange={setSelectedDate} />
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            lg: "repeat(2, minmax(0, 1fr))",
+          },
+          gap: 3,
+        }}
+      >
+        <SleepReportCard report={dummySleepReport} />
 
-      {activeBaby && (
-        <Typography color="text.secondary">
-          {activeBaby.name} is {activeBaby.ageMonths} months old.
-        </Typography>
-      )}
+        <FeedingReportCard report={dummyFeedingReport} />
+      </Box>
 
-      <Stack direction="row" spacing={2}>
-        <Button
-          variant="contained"
-          onClick={() => openOnboarding("add")}
-        >
-          Add another baby
-        </Button>
-
-        <Button
-          variant="outlined"
-          onClick={() => openOnboarding("restart")}
-          disabled={!activeBaby}
-        >
-          Restart onboarding
-        </Button>
-      </Stack>
+      <WeeklyOverview report={dummyWeeklyReport} />
     </Stack>
   );
 }
