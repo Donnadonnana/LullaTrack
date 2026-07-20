@@ -3,10 +3,12 @@ import { Box, Stack, Typography } from "@mui/material";
 import dayjs from "dayjs";
 
 import { useAppSelector } from "../store/hooks";
+import { useState } from "react";
 
 import SleepReportCard from "../components/SleepReportCard/SleepReportCard";
 import FeedingReportCard from "../components/FeedingReportCard/FeedingReportCard";
 import WeeklyOverview from "../components/WeeklyOverview/WeeklyOverview";
+import DateNavigator from "../components/DateNavigator/DateNavigator";
 
 import {
   dummyFeedingReport,
@@ -16,6 +18,9 @@ import {
 
 export default function DashboardPage() {
   const { babies, activeBabyId } = useAppSelector((state) => state.babies);
+  const [selectedDate, setSelectedDate] = useState(
+    dayjs().format("YYYY-MM-DD"),
+  );
 
   const activeBaby = babies.find((baby) => baby.id === activeBabyId);
 
@@ -23,31 +28,9 @@ export default function DashboardPage() {
     return <Typography>Select or add a baby to view the dashboard.</Typography>;
   }
 
-  const currentDate = dayjs();
-
   return (
-    <Stack spacing={4}>
-      <Box>
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 800,
-            letterSpacing: "-0.03em",
-          }}
-        >
-          {activeBaby.name} is currently {activeBaby.ageMonths} months old!
-        </Typography>
-
-        <Typography
-          sx={{
-            mt: 0.75,
-            color: "text.secondary",
-          }}
-        >
-          {currentDate.format("dddd, MMMM D, YYYY")}
-        </Typography>
-      </Box>
-
+    <Stack spacing={6}>
+      <DateNavigator value={selectedDate} onChange={setSelectedDate} />
       <Box
         sx={{
           display: "grid",
