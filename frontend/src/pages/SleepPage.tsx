@@ -4,22 +4,33 @@ import BedtimeOutlinedIcon from "@mui/icons-material/BedtimeOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 
+import { useState } from "react";
+import dayjs from "dayjs";
+
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { addSleepLog, type SleepType } from "../store/slices/sleepSlice";
 
 import SleepCard from "../components/SleepCard/SleepCard";
 import WakeWindow from "../components/WakeWindow/WakeWindow";
+import DateNavigator from "../components/DateNavigator/DateNavigator";
+
 import { calculateWakeWindow } from "../utils/time";
 
 export default function SleepPage() {
   const dispatch = useAppDispatch();
+
+  const [selectedDate, setSelectedDate] = useState(
+    dayjs().format("YYYY-MM-DD"),
+  );
 
   const { babies, activeBabyId } = useAppSelector((state) => state.babies);
 
   const activeBaby = babies.find((baby) => baby.id === activeBabyId);
 
   const activeBabyLogs = useAppSelector((state) =>
-    state.sleep.logs.filter((log) => log.babyId === state.babies.activeBabyId),
+    state.sleep.logs.filter(
+      (log) => log.babyId === activeBabyId && log.date === selectedDate,
+    ),
   );
 
   const hasNightSleepLog = activeBabyLogs.some((log) => log.type === "night");
@@ -38,6 +49,7 @@ export default function SleepPage() {
     dispatch(
       addSleepLog({
         babyId: activeBabyId,
+        date: selectedDate,
         type,
         sleepNumber: type === "night" ? 1 : napCount + 1,
       }),
@@ -50,6 +62,7 @@ export default function SleepPage() {
 
   return (
     <Stack spacing={3}>
+      <DateNavigator value={selectedDate} onChange={setSelectedDate} />
       {activeBabyLogs.length === 0 ? (
         <Box
           sx={{
@@ -141,7 +154,7 @@ export default function SleepPage() {
             const previousLog = index > 0 ? activeBabyLogs[index - 1] : null;
 
             const wakeWindow = previousLog
-              ? calculateWakeWindow(previousLog.pickupTime, log.asleepTime)
+              ? calculateWakeWindow(previousLog.pickupTime, log.onBedTime)
               : null;
 
             return (
