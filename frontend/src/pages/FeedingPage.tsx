@@ -9,7 +9,6 @@ import { useState } from "react";
 
 import DateNavigator from "../components/DateNavigator/DateNavigator";
 import FeedingCard from "../components/FeedingCard/FeedingCard";
-import FeedingReportCard from "../components/FeedingReportCard/FeedingReportCard";
 
 import {
   addFeedingLog,
@@ -21,7 +20,6 @@ import {
 
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 
-import { dummyFeedingReport } from "../data/dashboardDummyData";
 
 export default function FeedingPage() {
   const dispatch = useAppDispatch();
@@ -77,44 +75,10 @@ export default function FeedingPage() {
     );
   }
 
+  console.log(activeBabyFeedingLogs);
   return (
     <Stack spacing={3}>
       <DateNavigator value={selectedDate} onChange={setSelectedDate} />
-
-      <FeedingReportCard
-        title="Daily feeding summary"
-        report={dummyFeedingReport}
-      />
-
-      <Stack
-        direction={{
-          xs: "column",
-          sm: "row",
-        }}
-        spacing={2}
-        sx={{
-          justifyContent: "flex-end",
-        }}
-      >
-        <Button
-          variant="contained"
-          size="large"
-          startIcon={<ChildCareOutlinedIcon />}
-          onClick={() => handleAddFeeding("breastfeeding")}
-        >
-          Add breastfeeding
-        </Button>
-
-        <Button
-          variant="outlined"
-          size="large"
-          startIcon={<LocalDrinkOutlinedIcon />}
-          onClick={() => handleAddFeeding("bottle")}
-        >
-          Add bottle
-        </Button>
-      </Stack>
-
       {activeBabyFeedingLogs.length === 0 ? (
         <Box
           sx={{
