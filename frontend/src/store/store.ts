@@ -21,7 +21,7 @@ export const store = configureStore({
     babies: babyReducer,
     theme: themeReducer,
     sleep: sleepReducer,
-    feed: feedingReducer
+    feeding: feedingReducer
   },
 
   preloadedState: persistedState

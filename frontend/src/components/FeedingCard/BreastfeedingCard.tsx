@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
-import BreastfeedingOutlinedIcon from "@mui/icons-material/BreastfeedingOutlined";
+import ChildCareOutlinedIcon from "@mui/icons-material/ChildCareOutlined";
 
 import type {
   BreastSide,
@@ -81,7 +81,7 @@ export default function BreastfeedingCard({
                   color: "primary.main",
                 }}
               >
-                <BreastfeedingOutlinedIcon />
+                <ChildCareOutlinedIcon />
               </Box>
 
               <Box>
