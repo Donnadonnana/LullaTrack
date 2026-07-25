@@ -32,7 +32,7 @@ export default function FeedingPage() {
 
   const activeBaby = babies.find((baby) => baby.id === activeBabyId);
 
-  const activeBabyFeedingLogs = useAppSelector((state: any) =>
+  const activeBabyFeedingLogs = useAppSelector((state) =>
     state.feeding.logs.filter(
       (log) => log.babyId === activeBabyId && log.date === selectedDate,
     ),
