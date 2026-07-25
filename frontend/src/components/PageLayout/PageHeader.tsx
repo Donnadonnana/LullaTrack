@@ -1,56 +1,72 @@
-import {
-  Box,
-  Divider,
-  IconButton,
-  Stack,
-  Typography,
-  useTheme,
-} from "@mui/material";
-import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
-import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
+import { Box, Divider, Stack, Typography } from "@mui/material";
 
-import { useMatches } from "react-router-dom";
-import { useAppDispatch } from "../../store/hooks";
-import { toggleTheme } from "../../store/slices/themeSlice";
+import type { ReactNode } from "react";
 
-export default function PageHeader() {
-  const theme = useTheme();
-  const dispatch = useAppDispatch();
+type PageHeaderProps = {
+  title: string;
+  subtitle?: string;
+  rightContent?: ReactNode;
+};
 
-  // Get current route
-  const matches = useMatches();
-  const currentMatch = matches[matches.length - 1];
-
-  // Route title (fallback to Dashboard)
-  const title =
-    (currentMatch.handle as { title?: string })?.title ?? "Dashboard";
-
-  const isDarkMode = theme.palette.mode === "dark";
-
+export default function PageHeader({
+  title,
+  subtitle,
+  rightContent,
+}: PageHeaderProps) {
   return (
-    <Box sx={{ px: 6, pt: 6 }}>
+    <Box>
       <Stack
-        direction="row"
+        direction={{
+          xs: "column",
+          sm: "row",
+        }}
         sx={{
-          mb: 2,
-          alignItems: "center",
+          alignItems: {
+            xs: "flex-start",
+            sm: "center",
+          },
           justifyContent: "space-between",
+          gap: 2,
         }}
       >
-        <Typography variant="h4" sx={{ fontWeight: "700" }}>
-          {title}
-        </Typography>
-        <IconButton
-          onClick={() => dispatch(toggleTheme())}
-          aria-label={
-            isDarkMode ? "Switch to light mode" : "Switch to dark mode"
-          }
-        >
-          {isDarkMode ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
-        </IconButton>
+        <Box>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 800,
+              letterSpacing: "-0.03em",
+            }}
+          >
+            {title}
+          </Typography>
+
+          {subtitle && (
+            <Typography
+              sx={{
+                mt: 0.5,
+                color: "text.secondary",
+              }}
+            >
+              {subtitle}
+            </Typography>
+          )}
+        </Box>
+
+        {rightContent && (
+          <Box
+            sx={{
+              width: {
+                xs: "100%",
+                sm: "auto",
+              },
+            }}
+          >
+            {rightContent}
+          </Box>
+        )}
       </Stack>
 
-      <Divider />
+      <Divider sx={{ mt: 2.5 }} />
     </Box>
   );
 }

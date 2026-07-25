@@ -13,6 +13,7 @@ import { addSleepLog, type SleepType } from "../store/slices/sleepSlice";
 import SleepCard from "../components/SleepCard/SleepCard";
 import WakeWindow from "../components/WakeWindow/WakeWindow";
 import DateNavigator from "../components/DateNavigator/DateNavigator";
+import PageHeader from "../components/PageLayout/PageHeader";
 
 import { calculateWakeWindow } from "../utils/time";
 
@@ -62,7 +63,12 @@ export default function SleepPage() {
 
   return (
     <Stack spacing={3}>
-      <DateNavigator value={selectedDate} onChange={setSelectedDate} />
+      <PageHeader
+        title="Sleep"
+        rightContent={
+          <DateNavigator value={selectedDate} onChange={setSelectedDate} />
+        }
+      />
       {activeBabyLogs.length === 0 ? (
         <Box
           sx={{

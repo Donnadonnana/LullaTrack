@@ -9,6 +9,7 @@ import SleepReportCard from "../components/SleepReportCard/SleepReportCard";
 import FeedingReportCard from "../components/FeedingReportCard/FeedingReportCard";
 import WeeklyOverview from "../components/WeeklyOverview/WeeklyOverview";
 import DateNavigator from "../components/DateNavigator/DateNavigator";
+import PageHeader from "../components/PageLayout/PageHeader";
 
 import {
   dummyFeedingReport,
@@ -30,7 +31,12 @@ export default function DashboardPage() {
 
   return (
     <Stack spacing={6}>
-      <DateNavigator value={selectedDate} onChange={setSelectedDate} />
+      <PageHeader
+        title="Dashboard"
+        rightContent={
+          <DateNavigator value={selectedDate} onChange={setSelectedDate} />
+        }
+      />
       <Box
         sx={{
           display: "grid",
@@ -45,7 +51,6 @@ export default function DashboardPage() {
 
         <FeedingReportCard report={dummyFeedingReport} />
       </Box>
-
       <WeeklyOverview report={dummyWeeklyReport} />
     </Stack>
   );

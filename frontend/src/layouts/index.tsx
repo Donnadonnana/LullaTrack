@@ -2,7 +2,6 @@ import { Box } from "@mui/material";
 import { Outlet } from "react-router-dom";
 
 import Sidebar from "../components/Sidebar/Sidebar";
-import PageHeader from "../components/PageLayout/PageHeader";
 
 export default function MainLayout() {
   return (
@@ -15,7 +14,6 @@ export default function MainLayout() {
           minWidth: 0,
         }}
       >
-        <PageHeader />
 
         <Box sx={{ px: 4, py: 3 }}>
           <Outlet />
