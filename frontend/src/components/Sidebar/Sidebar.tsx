@@ -77,14 +77,22 @@ export default function Sidebar() {
       sx={{
         width: drawerWidth,
         flexShrink: 0,
-        minHeight: "100vh",
+
+        height: "100vh",
+        position: "sticky",
+        top: 0,
+
         bgcolor: "background.paper",
         borderRight: 1,
         borderColor: "divider",
+
         display: "flex",
         flexDirection: "column",
+
         px: 2,
         py: 3,
+
+        overflowY: "auto",
       }}
     >
       <Typography
