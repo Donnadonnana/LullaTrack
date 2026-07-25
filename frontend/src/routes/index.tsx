@@ -9,6 +9,7 @@ import NotFoundPage from "../pages/NotFoundPage";
 import LoginPage from "../pages/Auth/LoginPage";
 import RegisterPage from "../pages/Auth/RegisterPage";
 import OnboardingPage from "../pages/Onboarding/OnboardingPage";
+import SettingsPage from "../pages/SettingsPage";
 
 export const router: any = createBrowserRouter([
   {
@@ -41,32 +42,25 @@ export const router: any = createBrowserRouter([
         children: [
           {
             index: true,
-
             element: <DashboardPage />,
-
-            handle: {
-              title: "Dashboard",
-            },
           },
 
           {
             path: "sleep",
 
             element: <SleepPage />,
-
-            handle: {
-              title: "Sleep",
-            },
           },
 
           {
             path: "feeding",
 
             element: <FeedingPage />,
+          },
 
-            handle: {
-              title: "Feeding",
-            },
+          {
+            path: "Settings",
+
+            element: <SettingsPage />,
           },
         ],
       },

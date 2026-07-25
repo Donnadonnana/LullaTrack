@@ -3,6 +3,7 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 import ChildCareOutlinedIcon from "@mui/icons-material/ChildCareOutlined";
 import LocalDrinkOutlinedIcon from "@mui/icons-material/LocalDrinkOutlined";
 import RestaurantOutlinedIcon from "@mui/icons-material/RestaurantOutlined";
+import PageHeader from "../components/PageLayout/PageHeader";
 
 import dayjs from "dayjs";
 import { useState } from "react";
@@ -20,7 +21,6 @@ import {
 
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 
-
 export default function FeedingPage() {
   const dispatch = useAppDispatch();
 
@@ -32,7 +32,7 @@ export default function FeedingPage() {
 
   const activeBaby = babies.find((baby) => baby.id === activeBabyId);
 
-  const activeBabyFeedingLogs = useAppSelector((state: any) =>
+  const activeBabyFeedingLogs = useAppSelector((state) =>
     state.feeding.logs.filter(
       (log) => log.babyId === activeBabyId && log.date === selectedDate,
     ),
@@ -75,10 +75,14 @@ export default function FeedingPage() {
     );
   }
 
-  console.log(activeBabyFeedingLogs);
   return (
     <Stack spacing={3}>
-      <DateNavigator value={selectedDate} onChange={setSelectedDate} />
+      <PageHeader
+        title="Sleep"
+        rightContent={
+          <DateNavigator value={selectedDate} onChange={setSelectedDate} />
+        }
+      />
       {activeBabyFeedingLogs.length === 0 ? (
         <Box
           sx={{
