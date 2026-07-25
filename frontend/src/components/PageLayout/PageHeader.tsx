@@ -1,72 +1,37 @@
-import { Box, Divider, Stack, Typography } from "@mui/material";
+import { Box, Divider, Typography } from "@mui/material";
 
 import type { ReactNode } from "react";
 
 type PageHeaderProps = {
   title: string;
-  subtitle?: string;
   rightContent?: ReactNode;
 };
 
-export default function PageHeader({
-  title,
-  subtitle,
-  rightContent,
-}: PageHeaderProps) {
+export default function PageHeader({ title, rightContent }: PageHeaderProps) {
   return (
-    <Box>
-      <Stack
-        direction={{
-          xs: "column",
-          sm: "row",
-        }}
+    <div>
+      <Box
         sx={{
-          alignItems: {
-            xs: "flex-start",
-            sm: "center",
-          },
-          justifyContent: "space-between",
-          gap: 2,
+          display: "grid",
+          gridTemplateColumns: "1fr auto 1fr",
+          alignItems: "center",
         }}
       >
-        <Box>
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: 800,
-              letterSpacing: "-0.03em",
-            }}
-          >
-            {title}
-          </Typography>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
+            letterSpacing: "-0.03em",
+          }}
+        >
+          {title}
+        </Typography>
 
-          {subtitle && (
-            <Typography
-              sx={{
-                mt: 0.5,
-                color: "text.secondary",
-              }}
-            >
-              {subtitle}
-            </Typography>
-          )}
-        </Box>
+        {rightContent && <Box>{rightContent}</Box>}
 
-        {rightContent && (
-          <Box
-            sx={{
-              width: {
-                xs: "100%",
-                sm: "auto",
-              },
-            }}
-          >
-            {rightContent}
-          </Box>
-        )}
-      </Stack>
-
-      <Divider sx={{ mt: 2.5 }} />
-    </Box>
+        <Box />
+      </Box>
+      <Divider sx={{ mt: 2 }} />
+    </div>
   );
 }
