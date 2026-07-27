@@ -4,20 +4,13 @@
     "module": "ES2022",
     "moduleResolution": "bundler",
     "resolvePackageJsonExports": true,
-    "baseUrl": ".",
-    "paths": {
-      "firebase-functions": ["node_modules/firebase-functions/lib/v2/index.d.ts"],
-      "firebase-functions/https": ["node_modules/firebase-functions/lib/v2/providers/https.d.ts"],
-      "firebase-functions/v2": ["node_modules/firebase-functions/lib/v2/index.d.ts"],
-      "firebase-functions/v2/https": ["node_modules/firebase-functions/lib/v2/providers/https.d.ts"]
-    },
-    "outDir": "lib",
     "rootDir": "src",
+    "outDir": "lib",
     "strict": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true
   },
-  "include": ["src"]
+  "include": ["src/**/*.ts"]
 }
