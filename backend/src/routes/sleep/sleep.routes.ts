@@ -1,9 +1,7 @@
 import express from "express";
 import { inject, injectable } from "inversify";
-
 import type { Routes } from "../../types/routes.model";
-
-import { SleepService } from "../../services/sleep/sleep.service";
+import { SleepService } from "../../service/sleep/sleep.service";
 
 @injectable()
 export class SleepRoutes implements Routes {

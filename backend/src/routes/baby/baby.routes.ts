@@ -3,7 +3,7 @@ import { inject, injectable } from "inversify";
 
 import type { Routes } from "../../types/routes.model";
 
-import { BabyService } from "../../services/baby/baby.service";
+import { BabyService } from "../../service/baby/baby.service";
 
 @injectable()
 export class BabyRoutes implements Routes {
