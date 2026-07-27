@@ -29,15 +29,15 @@ export class SleepService {
       .where("date", "==", date)
       .get();
 
-    return snapshot.docs
-      .map((document) => ({
-        id: document.id,
-        ...document.data(),
-      }))
-      .sort(
-        (first, second) =>
-          Number(first.sleepNumber) - Number(second.sleepNumber),
-      ) as SleepLog[];
+    const logs = snapshot.docs.map(
+      (document) =>
+        ({
+          id: document.id,
+          ...document.data(),
+        }) as SleepLog,
+    );
+
+    return logs.sort((first, second) => first.sleepNumber - second.sleepNumber);
   }
 
   public async getById(sleepLogId: string): Promise<SleepLog | null> {
