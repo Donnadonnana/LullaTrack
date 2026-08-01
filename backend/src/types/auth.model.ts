@@ -32,3 +32,41 @@ export interface RegisterResponse {
     feedingMethod: RegisterBaby["feedingMethod"];
   };
 }
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  user: {
+    id: string;
+    email: string;
+    displayName: string | null;
+  };
+  idToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+export interface FirebaseLoginResponse {
+  localId: string;
+  email: string;
+  displayName?: string;
+  idToken: string;
+  refreshToken: string;
+  expiresIn: string;
+  registered: boolean;
+}
+
+export interface FirebaseAuthErrorResponse {
+  error?: {
+    code?: number;
+    message?: string;
+    errors?: Array<{
+      message?: string;
+      domain?: string;
+      reason?: string;
+    }>;
+  };
+}

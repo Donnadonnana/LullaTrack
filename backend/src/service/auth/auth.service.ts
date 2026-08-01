@@ -4,6 +4,10 @@ import { FirebaseAdminService } from "../firebase-admin/firebase-admin.service.j
 import type {
   RegisterRequest,
   RegisterResponse,
+  LoginRequest,
+  LoginResponse,
+  FirebaseLoginResponse,
+  FirebaseAuthErrorResponse,
 } from "../../types/auth.model.js";
 
 @injectable()
@@ -79,6 +83,73 @@ export class AuthService {
         .catch(() => undefined);
 
       throw error;
+    }
+  }
+
+  public async login(request: LoginRequest): Promise<LoginResponse> {
+    const { email, password } = request;
+    if (!email?.trim() || !password) {
+      throw new Error("Email and password are required.");
+    }
+
+    const firebaseApiKey = process.env.LULLATRACK_FIREBASE_API_KEY;
+    if (!firebaseApiKey) {
+      throw new Error("FIREBASE_API_KEY is not configured.");
+    }
+
+    const authBaseUrl = process.env.LULLATRACK_FIREBASE_AUTH_EMULATOR_HOST
+      ? `http://${process.env.LULLATRACK_FIREBASE_AUTH_EMULATOR_HOST}`
+      : "https://identitytoolkit.googleapis.com";
+    const response = await fetch(
+      `${authBaseUrl}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${firebaseApiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password,
+          returnSecureToken: true,
+        }),
+      },
+    );
+    const result = (await response.json()) as
+      | FirebaseLoginResponse
+      | FirebaseAuthErrorResponse;
+    if (!response.ok || !("idToken" in result)) {
+      const firebaseMessage =
+        "error" in result ? result.error?.message : undefined;
+
+      throw new Error(this.getLoginErrorMessage(firebaseMessage));
+    }
+    return {
+      user: {
+        id: result.localId,
+        email: result.email,
+        displayName: result.displayName ?? null,
+      },
+      idToken: result.idToken,
+      refreshToken: result.refreshToken,
+      expiresIn: Number(result.expiresIn),
+    };
+  }
+
+  private getLoginErrorMessage(firebaseMessage?: string): string {
+    switch (firebaseMessage) {
+      case "EMAIL_NOT_FOUND":
+      case "INVALID_PASSWORD":
+      case "INVALID_LOGIN_CREDENTIALS":
+        return "Invalid email or password.";
+
+      case "USER_DISABLED":
+        return "This account has been disabled.";
+
+      case "TOO_MANY_ATTEMPTS_TRY_LATER":
+        return "Too many login attempts. Please try again later.";
+
+      default:
+        return "Unable to sign in.";
     }
   }
 }
