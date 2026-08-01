@@ -8,6 +8,7 @@ import DIContainer from "./di-container";
 
 import { BabyRoutes } from "./routes/baby/baby.routes";
 import { SleepRoutes } from "./routes/sleep/sleep.routes";
+import { AuthRoutes } from "./routes/auth/auth.routes";
 
 setGlobalOptions({
   region: "northamerica-northeast1",
@@ -18,6 +19,7 @@ const app = new App({
   routes: [
     DIContainer.get(BabyRoutes),
     DIContainer.get(SleepRoutes),
+    DIContainer.get(AuthRoutes),
   ],
 });
 

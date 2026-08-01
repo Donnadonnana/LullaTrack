@@ -1,4 +1,5 @@
 import { injectable } from "inversify";
+import { getAuth } from "firebase-admin/auth";
 
 import {
   applicationDefault,
@@ -16,9 +17,8 @@ import {
 @injectable()
 export class FirebaseAdminService {
   public readonly app: App;
-
+  public readonly auth;
   public readonly db: Firestore;
-
   public readonly fieldValue = FieldValue;
 
   constructor() {
@@ -29,6 +29,7 @@ export class FirebaseAdminService {
       });
 
     this.db = getFirestore(this.app);
+    this.auth = getAuth();
 
     this.db.settings({
       ignoreUndefinedProperties: true,
