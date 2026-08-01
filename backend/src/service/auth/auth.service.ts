@@ -88,21 +88,18 @@ export class AuthService {
 
   public async login(request: LoginRequest): Promise<LoginResponse> {
     const { email, password } = request;
-
     if (!email?.trim() || !password) {
       throw new Error("Email and password are required.");
     }
 
-    const firebaseApiKey = process.env.FIREBASE_API_KEY;
-
+    const firebaseApiKey = process.env.LULLATRACK_FIREBASE_API_KEY;
     if (!firebaseApiKey) {
       throw new Error("FIREBASE_API_KEY is not configured.");
     }
 
-    const authBaseUrl = process.env.FIREBASE_AUTH_EMULATOR_HOST
-      ? `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}`
+    const authBaseUrl = process.env.LULLATRACK_FIREBASE_AUTH_EMULATOR_HOST
+      ? `http://${process.env.LULLATRACK_FIREBASE_AUTH_EMULATOR_HOST}`
       : "https://identitytoolkit.googleapis.com";
-
     const response = await fetch(
       `${authBaseUrl}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${firebaseApiKey}`,
       {
@@ -117,18 +114,15 @@ export class AuthService {
         }),
       },
     );
-
     const result = (await response.json()) as
       | FirebaseLoginResponse
       | FirebaseAuthErrorResponse;
-
     if (!response.ok || !("idToken" in result)) {
       const firebaseMessage =
         "error" in result ? result.error?.message : undefined;
 
       throw new Error(this.getLoginErrorMessage(firebaseMessage));
     }
-
     return {
       user: {
         id: result.localId,
