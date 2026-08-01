@@ -7,7 +7,8 @@ import { SleepService } from "./service/sleep/sleep.service";
 
 import { BabyRoutes } from "./routes/baby/baby.routes";
 import { SleepRoutes } from "./routes/sleep/sleep.routes";
-
+import { AuthRoutes } from "./routes/auth/auth.routes";
+import { AuthService } from "./service/auth/auth.service";
 
 const DIContainer = new Container();
 
@@ -21,11 +22,15 @@ DIContainer.bind<BabyService>(BabyService).toSelf();
 
 DIContainer.bind<SleepService>(SleepService).toSelf();
 
+DIContainer.bind<AuthService>(AuthService).toSelf();
+
 
 // Routes
 DIContainer.bind<BabyRoutes>(BabyRoutes).toSelf();
 
 DIContainer.bind<SleepRoutes>(SleepRoutes).toSelf();
+
+DIContainer.bind<AuthRoutes>(AuthRoutes).toSelf();
 
 
 export default DIContainer;
