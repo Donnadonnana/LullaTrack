@@ -5,6 +5,7 @@ import type { Routes } from "../../types/routes.model.js";
 import type { UpdateUserRequest } from "../../types/user.model.js";
 
 import { UserService } from "../../service/user/user.service.js";
+import { BabyService } from "../../service/baby/baby.service.js";
 import { AuthMiddleware } from "../../middlewares/auth/auth.middleware.js";
 
 @injectable()
@@ -16,6 +17,9 @@ export class UserRoutes implements Routes {
   constructor(
     @inject(UserService)
     private readonly userService: UserService,
+
+    @inject(BabyService)
+    private readonly babyService: BabyService,
 
     @inject(AuthMiddleware)
     private readonly authMiddleware: AuthMiddleware,
@@ -33,8 +37,16 @@ export class UserRoutes implements Routes {
   private getMe(): void {
     this.router.get("/me", async (req, res) => {
       try {
-        const user = await this.userService.getById(req.userId);
+        const userId = req.userId;
+        const [user, babies] = await Promise.all([
 
+            this.userService.getById(userId),
+    
+            this.babyService.getAll(userId),
+    
+          ]);
+    
+    
         if (!user) {
           res.status(404).json({
             message: "User not found.",
@@ -43,7 +55,11 @@ export class UserRoutes implements Routes {
           return;
         }
 
-        res.json(user);
+        res.json({
+          user,
+          babies,
+        });
+        
       } catch (error) {
         console.error("Unable to get user:", error);
 
