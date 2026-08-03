@@ -1,7 +1,8 @@
 import express from "express";
 import { inject, injectable } from "inversify";
-import type { Routes } from "../../types/routes.model";
-import { SleepService } from "../../service/sleep/sleep.service";
+import type { Routes } from "../../types/routes.model.js";
+import { SleepService } from "../../service/sleep/sleep.service.js";
+import { AuthMiddleware } from "../../middlewares/auth/auth.middleware.js";
 
 @injectable()
 export class SleepRoutes implements Routes {
@@ -12,38 +13,42 @@ export class SleepRoutes implements Routes {
   constructor(
     @inject(SleepService)
     private readonly sleepService: SleepService,
+
+    @inject(AuthMiddleware)
+    private readonly authMiddleware: AuthMiddleware,
   ) {
+    this.router.use(this.authMiddleware.middleware);
+
     this.initRoutes();
   }
 
   private initRoutes(): void {
     this.getSleepLogs();
+
     this.createSleepLog();
+
     this.updateSleepLog();
+
     this.deleteSleepLog();
   }
 
+  // GET /sleep?babyId=abc123&date=2026-08-03
   private getSleepLogs(): void {
     this.router.get("/", async (req, res) => {
       try {
-        const userId = String(req.query.userId ?? "");
+        const userId = req.userId;
         const babyId = String(req.query.babyId ?? "");
         const date = String(req.query.date ?? "");
 
-        if (!userId || !babyId || !date) {
+        if (!babyId || !date) {
           res.status(400).json({
-            message:
-              "userId, babyId and date are required.",
+            message: "babyId and date are required.",
           });
 
           return;
         }
 
-        const logs = await this.sleepService.getByDate(
-          userId,
-          babyId,
-          date,
-        );
+        const logs = await this.sleepService.getByDate(userId, babyId, date);
 
         res.json(logs);
       } catch (error) {
@@ -56,19 +61,20 @@ export class SleepRoutes implements Routes {
     });
   }
 
+  // POST /sleep
   private createSleepLog(): void {
     this.router.post("/", async (req, res) => {
       try {
+        const userId = req.userId;
+  
         const {
-          userId,
           babyId,
           date,
           type,
           sleepNumber,
         } = req.body;
-
+  
         if (
-          !userId ||
           !babyId ||
           !date ||
           !type ||
@@ -76,12 +82,12 @@ export class SleepRoutes implements Routes {
         ) {
           res.status(400).json({
             message:
-              "userId, babyId, date, type and sleepNumber are required.",
+              "babyId, date, type and sleepNumber are required.",
           });
-
+  
           return;
         }
-
+  
         const log = await this.sleepService.create({
           userId,
           babyId,
@@ -89,11 +95,11 @@ export class SleepRoutes implements Routes {
           type,
           sleepNumber,
         });
-
+  
         res.status(201).json(log);
       } catch (error) {
         console.error(error);
-
+  
         res.status(500).json({
           message: "Unable to create sleep log.",
         });
@@ -131,9 +137,7 @@ export class SleepRoutes implements Routes {
   private deleteSleepLog(): void {
     this.router.delete("/:sleepLogId", async (req, res) => {
       try {
-        const deleted = await this.sleepService.delete(
-          req.params.sleepLogId,
-        );
+        const deleted = await this.sleepService.delete(req.params.sleepLogId);
 
         if (!deleted) {
           res.status(404).json({
