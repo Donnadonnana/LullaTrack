@@ -10,6 +10,9 @@ import { SleepRoutes } from "./routes/sleep/sleep.routes";
 import { AuthRoutes } from "./routes/auth/auth.routes";
 import { AuthService } from "./service/auth/auth.service";
 
+// Middlewares
+import { AuthMiddleware } from "./middlewares/auth/auth.middleware";
+
 const DIContainer = new Container();
 
 // Core services
@@ -24,6 +27,9 @@ DIContainer.bind<SleepService>(SleepService).toSelf();
 
 DIContainer.bind<AuthService>(AuthService).toSelf();
 
+
+// Middlewares
+DIContainer.bind<AuthMiddleware>(AuthMiddleware).toSelf();
 
 // Routes
 DIContainer.bind<BabyRoutes>(BabyRoutes).toSelf();
