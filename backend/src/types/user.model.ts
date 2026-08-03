@@ -8,3 +8,4 @@ export interface User {
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
+export type UpdateUserRequest = Partial<Pick<User, "firstName" | "lastName">>;
