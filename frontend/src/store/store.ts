@@ -23,25 +23,6 @@ export const store = configureStore({
 
   preloadedState: persistedState
     ? {
-        auth: persistedState.auth,
-
-        babies: {
-          babies: persistedState.babies.babies,
-          activeBabyId: persistedState.babies.activeBabyId,
-
-          // Do not restore unfinished onboarding state.
-          onboarding: {
-            mode: "create" as const,
-            step: 0,
-            draft: {
-              name: "",
-              gender: "" as const,
-              dateOfBirth: null,
-              feedingMethod: "" as const,
-            },
-          },
-        },
-
         theme: persistedState.theme,
       }
     : undefined,
@@ -51,15 +32,6 @@ store.subscribe(() => {
   const state = store.getState();
 
   savePersistedState({
-    auth: {
-      user: state.auth.user,
-    },
-
-    babies: {
-      babies: state.babies.babies,
-      activeBabyId: state.babies.activeBabyId,
-    },
-
     theme: {
       mode: state.theme.mode,
     },
@@ -67,4 +39,5 @@ store.subscribe(() => {
 });
 
 export type RootState = ReturnType<typeof store.getState>;
+
 export type AppDispatch = typeof store.dispatch;

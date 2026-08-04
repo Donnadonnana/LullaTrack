@@ -1,18 +1,26 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
+import { Box, CircularProgress } from "@mui/material";
 import { useAppSelector } from "../../store/hooks";
 
 export default function AuthGuard() {
-  const user = useAppSelector((state) => state.auth.user);
-  const location = useLocation();
+  const { user, idToken, initialized } = useAppSelector((state) => state.auth);
 
-  if (!user) {
+  if (!initialized) {
     return (
-      <Navigate
-        to="/login"
-        replace
-        state={{ from: location.pathname }}
-      />
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "grid",
+          placeItems: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
     );
+  }
+
+  if (!user || !idToken) {
+    return <Navigate to="/login" replace />;
   }
 
   return <Outlet />;

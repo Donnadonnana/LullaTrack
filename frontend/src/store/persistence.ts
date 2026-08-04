@@ -1,17 +1,8 @@
-import type { User } from "./slices/authSlice";
-import type { Baby } from "./slices/babySlice";
 import type { ThemeMode } from "./slices/themeSlice";
 
-const STORAGE_KEY = "lullatrack-state";
+const STORAGE_KEY = "lullatrack-preferences";
 
-export type PersistedState = {
-  auth: {
-    user: User | null;
-  };
-  babies: {
-    babies: Baby[];
-    activeBabyId: string | null;
-  };
+type PersistedState = {
   theme: {
     mode: ThemeMode;
   };
@@ -19,15 +10,15 @@ export type PersistedState = {
 
 export function loadPersistedState(): PersistedState | undefined {
   try {
-    const serializedState = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEY);
 
-    if (!serializedState) {
+    if (!stored) {
       return undefined;
     }
 
-    return JSON.parse(serializedState) as PersistedState;
-  } catch (error) {
-    console.error("Unable to load persisted state:", error);
+    return JSON.parse(stored) as PersistedState;
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
     return undefined;
   }
 }
@@ -35,11 +26,7 @@ export function loadPersistedState(): PersistedState | undefined {
 export function savePersistedState(state: PersistedState): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (error) {
-    console.error("Unable to save persisted state:", error);
+  } catch {
+    // Ignore storage errors.
   }
-}
-
-export function clearPersistedState(): void {
-  localStorage.removeItem(STORAGE_KEY);
 }

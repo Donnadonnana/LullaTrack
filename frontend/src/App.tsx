@@ -1,29 +1,28 @@
 import type { ReactNode } from "react";
 import { useEffect } from "react";
+
 import { useAppDispatch, useAppSelector } from "./store/hooks";
-import { restoreSession } from "./store/slices/authSlice";
 
-interface AppProps {
+import { markAuthInitialized, restoreSession } from "./store/slices/authSlice";
+
+type AppProps = {
   children: ReactNode;
-}
+};
 
-function App({ children }: AppProps) {
+export default function App({ children }: AppProps) {
   const dispatch = useAppDispatch();
+  const { idToken, initialized } = useAppSelector((state) => state.auth);
 
-  const { status, idToken } = useAppSelector((state) => state.auth);
-  const authState = useAppSelector((state) => state.auth);
-
-  console.log("auth state", authState);
-
-  console.log("idToken", idToken);
-  console.log("status", status);
   useEffect(() => {
-    if (idToken && status === "authenticated") {
-      void dispatch(restoreSession());
+    if (initialized) {
+      return;
     }
-  }, [dispatch]);
+    if (idToken) {
+      void dispatch(restoreSession());
+      return;
+    }
+    dispatch(markAuthInitialized());
+  }, [dispatch, idToken, initialized]);
 
   return <>{children}</>;
 }
-
-export default App;
