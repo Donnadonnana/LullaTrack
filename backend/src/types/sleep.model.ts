@@ -9,6 +9,7 @@ export type SleepLog = {
   date: string;
   type: SleepType;
   sleepNumber: number;
+  notes: "string";
 
   onBedTime: string;
   asleepTime: string;
@@ -28,5 +29,8 @@ export type CreateSleepLogRequest = {
 };
 
 export type UpdateSleepLogRequest = Partial<
-  Pick<SleepLog, "onBedTime" | "asleepTime" | "wakeTime" | "pickupTime">
+  Pick<
+    SleepLog,
+    "onBedTime" | "asleepTime" | "wakeTime" | "pickupTime" | "notes"
+  >
 >;
