@@ -1,6 +1,11 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-import { registerAccount, signInAccount, signOutUser } from "./authSlice";
+import {
+  registerAccount,
+  signInAccount,
+  signOutUser,
+  restoreSession,
+} from "./authSlice";
 
 export type BabyGender = "boy" | "girl";
 
@@ -187,6 +192,18 @@ const babySlice = createSlice({
         state.activeBabyId = null;
 
         state.onboarding = createInitialOnboardingState();
+      })
+
+      .addCase(restoreSession.fulfilled, (state, action) => {
+        state.babies = action.payload.babies;
+
+        const activeBabyStillExists = action.payload.babies.some(
+          (baby) => baby.id === state.activeBabyId,
+        );
+
+        state.activeBabyId = activeBabyStillExists
+          ? state.activeBabyId
+          : (action.payload.babies[0]?.id ?? null);
       });
   },
 });

@@ -1,8 +1,10 @@
 import {
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   Collapse,
   IconButton,
   Stack,
@@ -10,51 +12,106 @@ import {
   Typography,
 } from "@mui/material";
 
-import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
-import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
-import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
-
-import { useState } from "react";
-
-import type { SleepLog } from "../../store/slices/sleepSlice";
-import { removeSleepLog, updateSleepLog } from "../../store/slices/sleepSlice";
-import { useAppDispatch } from "../../store/hooks";
-
-import SleepTimeInput from "../SleepTimeInput/SleepTimeInput";
-
+import { useEffect, useMemo, useState } from "react";
 import {
-    calculateDuration,
-    formatDuration,
-  } from "../../utils/time";
+  deleteSleepLog,
+  saveSleepLog,
+  type SleepLog,
+} from "../../store/slices/sleepSlice";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import SleepTimeInput from "../SleepTimeInput/SleepTimeInput";
+import { calculateDuration, formatDuration } from "../../utils/time";
 
 type SleepCardProps = {
   log: SleepLog;
   babyName: string;
 };
 
+type SleepDraft = Pick<
+  SleepLog,
+  "onBedTime" | "asleepTime" | "wakeTime" | "pickupTime" | "notes"
+>;
+
 export default function SleepCard({ log, babyName }: SleepCardProps) {
   const dispatch = useAppDispatch();
+
+  const isSaving = useAppSelector((state) =>
+    state.sleep.savingIds.includes(log.id),
+  );
+
+  const isDeleting = useAppSelector((state) =>
+    state.sleep.deletingIds.includes(log.id),
+  );
+
+  const [draft, setDraft] = useState<SleepDraft>({
+    onBedTime: log.onBedTime,
+    asleepTime: log.asleepTime,
+    wakeTime: log.wakeTime,
+    pickupTime: log.pickupTime,
+    notes: log.notes ?? "",
+  });
+
   const [showNotes, setShowNotes] = useState(Boolean(log.notes));
 
-  const sleepDuration = calculateDuration(log.asleepTime, log.wakeTime);
+  useEffect(() => {
+    setDraft({
+      onBedTime: log.onBedTime,
+      asleepTime: log.asleepTime,
+      wakeTime: log.wakeTime,
+      pickupTime: log.pickupTime,
+      notes: log.notes ?? "",
+    });
+  }, [log]);
+
+  const hasChanges = useMemo(() => {
+    return (
+      draft.onBedTime !== log.onBedTime ||
+      draft.asleepTime !== log.asleepTime ||
+      draft.wakeTime !== log.wakeTime ||
+      draft.pickupTime !== log.pickupTime ||
+      draft.notes !== (log.notes ?? "")
+    );
+  }, [draft, log]);
+
+  const sleepDuration = calculateDuration(draft.asleepTime, draft.wakeTime);
 
   const isNap = log.type === "nap";
 
-  const sleepTitle = isNap
-    ? `Nap ${log.sleepNumber}`
-    : `Night Sleep`;
+  const sleepTitle = isNap ? `Nap ${log.sleepNumber}` : "Night Sleep";
 
-  const updateField = (field: keyof SleepLog, value: string) => {
-    dispatch(
-      updateSleepLog({
-        id: log.id,
-        changes: {
-          [field]: value,
-        },
-      }),
-    );
+  const updateField = (field: keyof SleepDraft, value: string) => {
+    setDraft((current) => ({
+      ...current,
+      [field]: value,
+    }));
   };
-  
+
+  const handleSave = async () => {
+    if (!hasChanges) {
+      return;
+    }
+
+    try {
+      await dispatch(
+        saveSleepLog({
+          id: log.id,
+          changes: draft,
+        }),
+      ).unwrap();
+    } catch (error) {
+      console.error("Unable to save sleep log:", error);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await dispatch(deleteSleepLog(log.id)).unwrap();
+    } catch (error) {
+      console.error("Unable to delete sleep log:", error);
+    }
+  };
+
   return (
     <Card
       variant="outlined"
@@ -64,48 +121,23 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
     >
       <CardContent>
         <Stack spacing={3}>
+          {/* Your existing header */}
+
           <Stack
             direction="row"
-            sx={{ alignItems: "center", justifyContent: "space-between" }}
+            sx={{
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
           >
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-              <Box
-                sx={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 3,
-                  display: "grid",
-                  placeItems: "center",
-                  bgcolor: "rgba(165, 216, 255, 0.25)",
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 3,
-                    display: "grid",
-                    placeItems: "center",
-                    bgcolor: isNap
-                      ? "rgba(255, 214, 165, 0.25)"
-                      : "rgba(154, 140, 255, 0.18)",
-                  }}
-                >
-                  {isNap ? (
-                    <LightModeOutlinedIcon
-                      sx={{
-                        color: "orange",
-                      }}
-                    />
-                  ) : (
-                    <DarkModeOutlinedIcon
-                      sx={{
-                        color: "primary.main",
-                      }}
-                    />
-                  )}
-                </Box>
-              </Box>
+            <Stack
+              direction="row"
+              spacing={1.5}
+              sx={{
+                alignItems: "center",
+              }}
+            >
+              {/* Keep your existing icon here */}
 
               <Box>
                 <Typography
@@ -128,7 +160,13 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
               </Box>
             </Stack>
 
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+              }}
+            >
               {sleepDuration !== null && (
                 <Chip
                   label={`${formatDuration(sleepDuration)} asleep`}
@@ -139,9 +177,14 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
 
               <IconButton
                 aria-label={`Delete ${sleepTitle}`}
-                onClick={() => dispatch(removeSleepLog(log.id))}
+                disabled={isDeleting}
+                onClick={() => void handleDelete()}
               >
-                <DeleteOutlineOutlinedIcon />
+                {isDeleting ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  <DeleteOutlineOutlinedIcon />
+                )}
               </IconButton>
             </Stack>
           </Stack>
@@ -159,25 +202,25 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
           >
             <SleepTimeInput
               label={`${babyName} on bed`}
-              value={log.onBedTime}
+              value={draft.onBedTime}
               onChange={(value) => updateField("onBedTime", value)}
             />
 
             <SleepTimeInput
               label={`${babyName} fell asleep`}
-              value={log.asleepTime}
+              value={draft.asleepTime}
               onChange={(value) => updateField("asleepTime", value)}
             />
 
             <SleepTimeInput
               label={`${babyName} woke up`}
-              value={log.wakeTime}
+              value={draft.wakeTime}
               onChange={(value) => updateField("wakeTime", value)}
             />
 
             <SleepTimeInput
               label={`${babyName} picked up`}
-              value={log.pickupTime}
+              value={draft.pickupTime}
               onChange={(value) => updateField("pickupTime", value)}
             />
           </Box>
@@ -204,7 +247,7 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
             <TextField
               label="Wake-ups, feeding, or other notes"
               placeholder={`${babyName} woke at 12:15 and fed for 10 minutes…`}
-              value={log.notes}
+              value={draft.notes}
               onChange={(event) => updateField("notes", event.target.value)}
               multiline
               minRows={3}
@@ -228,7 +271,7 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                 {babyName} slept for {formatDuration(sleepDuration)}
               </Typography>
 
-              {log.asleepTime && log.wakeTime && (
+              {draft.asleepTime && draft.wakeTime && (
                 <Typography
                   variant="body2"
                   sx={{
@@ -236,11 +279,44 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                     mt: 0.5,
                   }}
                 >
-                  From {log.asleepTime} to {log.wakeTime}
+                  From {draft.asleepTime} to {draft.wakeTime}
                 </Typography>
               )}
             </Box>
           )}
+
+          <Stack
+            direction="row"
+            spacing={2}
+            sx={{
+              justifyContent: "flex-end",
+              alignItems: "center",
+            }}
+          >
+            {hasChanges && (
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                }}
+              >
+                Unsaved changes
+              </Typography>
+            )}
+
+            <Button
+              variant="contained"
+              disabled={!hasChanges || isSaving || isDeleting}
+              onClick={() => void handleSave()}
+              startIcon={
+                isSaving ? (
+                  <CircularProgress size={18} color="inherit" />
+                ) : undefined
+              }
+            >
+              {isSaving ? "Saving…" : "Save"}
+            </Button>
+          </Stack>
         </Stack>
       </CardContent>
     </Card>

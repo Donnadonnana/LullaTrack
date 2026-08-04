@@ -3,11 +3,8 @@ import {
   createSlice,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-
 import { getCurrentUser, loginUser, registerUser } from "../../api/authApi";
-
 import type { LoginRequest, RegisterRequest, User } from "../../types/auth";
-
 import type { Baby } from "./babySlice";
 
 export type AuthStatus = "idle" | "loading" | "authenticated" | "error";
@@ -35,6 +32,7 @@ type AuthState = {
   status: AuthStatus;
   error: any;
   registrationDraft: RegistrationDraft | null;
+  initialized: boolean;
 };
 
 const STORAGE_KEY = "lullatrack-auth";
@@ -59,17 +57,15 @@ const parsedSession = getStoredSession();
 
 const initialState: AuthState = {
   user: parsedSession?.user ?? null,
-
   idToken: parsedSession?.idToken ?? null,
   refreshToken: parsedSession?.refreshToken ?? null,
   expiresAt: parsedSession?.expiresAt ?? null,
-
   status: parsedSession ? "authenticated" : "idle",
-
   error: null,
 
   // Do not persist this because it contains the password.
   registrationDraft: null,
+  initialized: false,
 };
 
 export const registerAccount = createAsyncThunk<AuthSession, RegisterRequest>(
@@ -105,6 +101,25 @@ export const signInAccount = createAsyncThunk<AuthSession, LoginRequest>(
       idToken: session.idToken,
       refreshToken: session.refreshToken,
       expiresAt: Date.now() + Number(session.expiresIn) * 1000,
+    };
+  },
+);
+
+export const restoreSession = createAsyncThunk<AuthSession, void>(
+  "auth/restoreSession",
+  async (): Promise<AuthSession> => {
+    const storedSession = getStoredSession();
+
+    if (!storedSession?.idToken) {
+      throw new Error("No saved session.");
+    }
+
+    const profile = await getCurrentUser(storedSession.idToken);
+
+    return {
+      ...storedSession,
+      user: profile.user,
+      babies: profile.babies,
     };
   },
 );
@@ -182,6 +197,32 @@ const authSlice = createSlice({
         state.error = action.payload ?? "Unable to register.";
       })
 
+      .addCase(restoreSession.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+
+      .addCase(restoreSession.fulfilled, (state, action) => {
+        state.user = action.payload.user;
+        state.idToken = action.payload.idToken;
+        state.refreshToken = action.payload.refreshToken;
+        state.expiresAt = action.payload.expiresAt;
+        state.status = "authenticated";
+        state.error = null;
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(action.payload));
+      })
+
+      .addCase(restoreSession.rejected, (state) => {
+        state.user = null;
+        state.idToken = null;
+        state.refreshToken = null;
+        state.expiresAt = null;
+        state.status = "idle";
+
+        localStorage.removeItem(STORAGE_KEY);
+      })
+
       // Sign in
       .addCase(signInAccount.pending, (state) => {
         state.status = "loading";
@@ -190,13 +231,9 @@ const authSlice = createSlice({
 
       .addCase(signInAccount.fulfilled, (state, action) => {
         state.user = action.payload.user;
-
         state.idToken = action.payload.idToken;
-
         state.refreshToken = action.payload.refreshToken;
-
         state.expiresAt = action.payload.expiresAt;
-
         state.status = "authenticated";
         state.error = null;
 
