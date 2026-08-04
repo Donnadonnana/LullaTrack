@@ -19,8 +19,9 @@ export class BabyService {
 
   public async getAll(userId: string): Promise<Baby[]> {
     const snapshot = await this.firebaseAdminService.db
-      .collection(this.collectionName)
-      .where("userId", "==", userId)
+      .collection("users")
+      .doc(userId)
+      .collection("babies")
       .get();
 
     return snapshot.docs.map((document) => ({
