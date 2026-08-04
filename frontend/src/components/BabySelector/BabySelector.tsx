@@ -138,8 +138,7 @@ export default function BabySelector() {
             </Typography>
 
             <Typography variant="body2" color="text.secondary">
-              {activeBaby.ageMonths}{" "}
-              {activeBaby.ageMonths === 1 ? "month" : "months"} old
+              {activeBaby.dateOfBirth}{" "}
             </Typography>
           </Box>
 
@@ -214,17 +213,11 @@ export default function BabySelector() {
                     bgcolor: babyBackground,
                   }}
                 >
-                  <ChildCare
-                    fontSize="small"
-                    sx={{ color: babyColor }}
-                  />
+                  <ChildCare fontSize="small" sx={{ color: babyColor }} />
                 </Avatar>
 
                 <ListItemText
                   primary={baby.name}
-                  secondary={`${baby.ageMonths} ${
-                    baby.ageMonths === 1 ? "month" : "months"
-                  } old`}
                   slotProps={{
                     primary: {
                       noWrap: true,

@@ -176,7 +176,7 @@ export default function BottleFeedingCard({
 
               <MenuItem value="formula">Formula</MenuItem>
 
-              <MenuItem value="mixed">Mixed</MenuItem>
+              <MenuItem value="combination">Combination</MenuItem>
             </Select>
           </FormControl>
 

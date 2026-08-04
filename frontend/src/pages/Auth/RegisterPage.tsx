@@ -10,7 +10,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAppDispatch } from "../../store/hooks";
-import { registerUser } from "../../store/slices/authSlice";
+import { registerAccount } from "../../store/slices/authSlice";
 import { startOnboarding } from "../../store/slices/babySlice";
 
 export default function RegisterPage() {
@@ -21,7 +21,7 @@ export default function RegisterPage() {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
 
-    dispatch(registerUser({ email }));
+    dispatch(registerAccount({ email }));
     dispatch(startOnboarding("create"));
 
     navigate("/onboarding", { replace: true });

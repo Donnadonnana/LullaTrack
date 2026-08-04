@@ -5,12 +5,9 @@ import authReducer from "./slices/authSlice";
 import babyReducer from "./slices/babySlice";
 import themeReducer from "./slices/themeSlice";
 import sleepReducer from "./slices/sleepSlice";
-import feedingReducer from "./slices/feedingSlice"
+import feedingReducer from "./slices/feedingSlice";
 
-import {
-  loadPersistedState,
-  savePersistedState,
-} from "./persistence";
+import { loadPersistedState, savePersistedState } from "./persistence";
 
 const persistedState = loadPersistedState();
 
@@ -21,7 +18,7 @@ export const store = configureStore({
     babies: babyReducer,
     theme: themeReducer,
     sleep: sleepReducer,
-    feeding: feedingReducer
+    feeding: feedingReducer,
   },
 
   preloadedState: persistedState
@@ -39,10 +36,8 @@ export const store = configureStore({
             draft: {
               name: "",
               gender: "" as const,
-              ageMonths: null,
+              dateOfBirth: null,
               feedingMethod: "" as const,
-              daySleepHours: null,
-              nightSleepHours: null,
             },
           },
         },
