@@ -14,7 +14,6 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { clearAuthError, signInAccount } from "../../store/slices/authSlice";
-import { startOnboarding } from "../../store/slices/babySlice";
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
@@ -34,36 +33,18 @@ export default function LoginPage() {
     dispatch(clearAuthError());
 
     try {
-      const session = await dispatch(
+      await dispatch(
         signInAccount({
           email: email.trim(),
           password,
         }),
       ).unwrap();
 
-      /*
-       * Do not use `babies` from useAppSelector here.
-       * That value belongs to the render before the
-       * async thunk finished.
-       *
-       * The fulfilled thunk payload already contains
-       * the latest babies from GET /users/me.
-       */
-      if (session.babies.length === 0) {
-        dispatch(startOnboarding("create"));
-
-        navigate("/onboarding", {
-          replace: true,
-        });
-
-        return;
-      }
-
       navigate("/", {
         replace: true,
       });
-    } catch {
-      // Redux stores the error in state.auth.error.
+    } catch (error) {
+      console.error("Login failed:", error);
     }
   };
 
@@ -118,18 +99,15 @@ export default function LoginPage() {
             required
             fullWidth
           />
-
           <TextField
             label="Password"
             type="password"
             value={password}
-            autoComplete="current-password"
-            disabled={isLoading}
             onChange={(event) => setPassword(event.target.value)}
+            autoComplete="current-password"
             required
             fullWidth
           />
-
           <Button
             type="submit"
             variant="contained"
