@@ -33,7 +33,7 @@ type AuthState = {
   refreshToken: string | null;
   expiresAt: number | null;
   status: AuthStatus;
-  error: string | unknown;
+  error: any;
   registrationDraft: RegistrationDraft | null;
 };
 
