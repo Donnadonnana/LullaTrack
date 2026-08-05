@@ -120,9 +120,7 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
       }}
     >
       <CardContent>
-        <Stack spacing={3}>
-          {/* Your existing header */}
-
+        <Stack spacing={1.25}>
           <Stack
             direction="row"
             sx={{
@@ -132,13 +130,11 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
           >
             <Stack
               direction="row"
-              spacing={1.5}
+              spacing={1.25}
               sx={{
                 alignItems: "center",
               }}
             >
-              {/* Keep your existing icon here */}
-
               <Box>
                 <Typography
                   variant="h6"
@@ -147,15 +143,6 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                   }}
                 >
                   {sleepTitle}
-                </Typography>
-
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: "text.secondary",
-                  }}
-                >
-                  Track {babyName}&apos;s sleep
                 </Typography>
               </Box>
             </Stack>
@@ -195,9 +182,11 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
               gridTemplateColumns: {
                 xs: "1fr",
                 sm: "repeat(2, minmax(0, 1fr))",
-                lg: "repeat(4, minmax(0, 1fr))",
+                xl: "repeat(4, minmax(0, 1fr))",
               },
-              gap: 2,
+              columnGap: 2,
+              rowGap: 1,
+              alignItems: "center",
             }}
           >
             <SleepTimeInput
@@ -256,38 +245,41 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
           </Collapse>
 
           {sleepDuration !== null && (
-            <Box
+            <Stack
+              direction="row"
+              spacing={0.75}
               sx={{
-                p: 2,
-                borderRadius: 3,
-                bgcolor: "rgba(165, 216, 255, 0.15)",
+                alignItems: "center",
+                flexWrap: "wrap",
+                color: "text.secondary",
               }}
             >
               <Typography
+                variant="caption"
                 sx={{
                   fontWeight: 700,
+                  color: "text.primary",
                 }}
               >
-                {babyName} slept for {formatDuration(sleepDuration)}
+                Slept {formatDuration(sleepDuration)}
               </Typography>
 
               {draft.asleepTime && draft.wakeTime && (
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: "text.secondary",
-                    mt: 0.5,
-                  }}
-                >
-                  From {draft.asleepTime} to {draft.wakeTime}
-                </Typography>
+                <>
+                  <Typography variant="caption" aria-hidden="true">
+                    ·
+                  </Typography>
+
+                  <Typography variant="caption">
+                    {draft.asleepTime}–{draft.wakeTime}
+                  </Typography>
+                </>
               )}
-            </Box>
+            </Stack>
           )}
 
           <Stack
             direction="row"
-            spacing={2}
             sx={{
               justifyContent: "flex-end",
               alignItems: "center",
@@ -305,7 +297,6 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
             )}
 
             <Button
-              variant="contained"
               disabled={!hasChanges || isSaving || isDeleting}
               onClick={() => void handleSave()}
               startIcon={

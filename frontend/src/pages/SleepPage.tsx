@@ -200,7 +200,7 @@ export default function SleepPage() {
           </Stack>
         </Box>
       ) : (
-        <Stack spacing={2}>
+        <Stack spacing={1}>
           {activeBabyLogs.map((log, index) => {
             const previousLog = index > 0 ? activeBabyLogs[index - 1] : null;
 

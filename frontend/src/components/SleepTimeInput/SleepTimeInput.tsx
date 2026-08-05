@@ -152,16 +152,14 @@ export default function TimeInput({
     <Box>
       <Typography
         component="label"
-        variant="body1"
         sx={{
           display: "block",
           color: hasError ? "error.main" : "text.secondary",
-          mb: 2,
-          ml: 2
+          mb: 1,
+          ml: 2,
         }}
       >
         {label}
-        {required ? " *" : ""}
       </Typography>
 
       <Box
