@@ -1,19 +1,22 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
+import {
+  registerAccount,
+  signInAccount,
+  signOutUser,
+  restoreSession,
+} from "./authSlice";
+
 export type BabyGender = "boy" | "girl";
-export type FeedingMethod =
-  | "breastfeeding"
-  | "bottle"
-  | "combination";
+
+export type FeedingMethod = "breastfeeding" | "bottle" | "combination";
 
 export type Baby = {
   id: string;
   name: string;
   gender: BabyGender;
-  ageMonths: number;
   feedingMethod: FeedingMethod;
-  daySleepHours: number;
-  nightSleepHours: number;
+  dateOfBirth: string;
 };
 
 export type OnboardingMode = "create" | "add" | "restart";
@@ -21,10 +24,8 @@ export type OnboardingMode = "create" | "add" | "restart";
 export type BabyDraft = {
   name: string;
   gender: BabyGender | "";
-  ageMonths: number | null;
   feedingMethod: FeedingMethod | "";
-  daySleepHours: number | null;
-  nightSleepHours: number | null;
+  dateOfBirth: string;
 };
 
 type BabyState = {
@@ -41,31 +42,54 @@ type BabyState = {
 const emptyDraft: BabyDraft = {
   name: "",
   gender: "",
-  ageMonths: null,
   feedingMethod: "",
-  daySleepHours: null,
-  nightSleepHours: null,
+  dateOfBirth: "",
 };
 
-const initialState: BabyState = {
-  babies: [],
-  activeBabyId: null,
-
-  onboarding: {
+function createInitialOnboardingState(): BabyState["onboarding"] {
+  return {
     mode: "create",
     step: 0,
-    draft: emptyDraft,
-  },
+    draft: {
+      ...emptyDraft,
+    },
+  };
+}
+
+function loadStoredBabies(): Baby[] {
+  try {
+    const storedSession = localStorage.getItem("lullatrack-auth");
+
+    if (!storedSession) {
+      return [];
+    }
+
+    const parsedSession = JSON.parse(storedSession) as {
+      babies?: Baby[];
+    };
+
+    return parsedSession.babies ?? [];
+  } catch {
+    return [];
+  }
+}
+
+const storedBabies = loadStoredBabies();
+
+const initialState: BabyState = {
+  babies: storedBabies,
+
+  activeBabyId: storedBabies[0]?.id ?? null,
+
+  onboarding: createInitialOnboardingState(),
 };
 
 const babySlice = createSlice({
   name: "babies",
   initialState,
+
   reducers: {
-    startOnboarding: (
-      state,
-      action: PayloadAction<OnboardingMode>
-    ) => {
+    startOnboarding: (state, action: PayloadAction<OnboardingMode>) => {
       const mode = action.payload;
 
       state.onboarding.mode = mode;
@@ -73,30 +97,27 @@ const babySlice = createSlice({
 
       if (mode === "restart" && state.activeBabyId) {
         const activeBaby = state.babies.find(
-          (baby) => baby.id === state.activeBabyId
+          (baby) => baby.id === state.activeBabyId,
         );
 
         if (activeBaby) {
           state.onboarding.draft = {
             name: activeBaby.name,
             gender: activeBaby.gender,
-            ageMonths: activeBaby.ageMonths,
+            dateOfBirth: activeBaby.dateOfBirth,
             feedingMethod: activeBaby.feedingMethod,
-            daySleepHours: activeBaby.daySleepHours,
-            nightSleepHours: activeBaby.nightSleepHours,
           };
 
           return;
         }
       }
 
-      state.onboarding.draft = { ...emptyDraft };
+      state.onboarding.draft = {
+        ...emptyDraft,
+      };
     },
 
-    updateBabyDraft: (
-      state,
-      action: PayloadAction<Partial<BabyDraft>>
-    ) => {
+    updateBabyDraft: (state, action: PayloadAction<Partial<BabyDraft>>) => {
       state.onboarding.draft = {
         ...state.onboarding.draft,
         ...action.payload,
@@ -108,80 +129,82 @@ const babySlice = createSlice({
     },
 
     previousOnboardingStep: (state) => {
-      state.onboarding.step = Math.max(
-        0,
-        state.onboarding.step - 1
-      );
+      state.onboarding.step = Math.max(0, state.onboarding.step - 1);
     },
 
+    /*
+     * The backend now creates the first baby
+     * during registration.
+     *
+     * This action only resets onboarding after
+     * registerAccount succeeds.
+     */
     finishOnboarding: (state) => {
-      const draft = state.onboarding.draft;
-
-      if (
-        !draft.name ||
-        !draft.gender ||
-        draft.ageMonths === null ||
-        !draft.feedingMethod ||
-        draft.daySleepHours === null ||
-        draft.nightSleepHours === null
-      ) {
-        return;
-      }
-
-      const babyData = {
-        name: draft.name,
-        gender: draft.gender,
-        ageMonths: draft.ageMonths,
-        feedingMethod: draft.feedingMethod,
-        daySleepHours: draft.daySleepHours,
-        nightSleepHours: draft.nightSleepHours,
-      };
-
-      if (
-        state.onboarding.mode === "restart" &&
-        state.activeBabyId
-      ) {
-        const index = state.babies.findIndex(
-          (baby) => baby.id === state.activeBabyId
-        );
-
-        if (index !== -1) {
-          state.babies[index] = {
-            id: state.activeBabyId,
-            ...babyData,
-          };
-        }
-      } else {
-        const newBaby: Baby = {
-          id: crypto.randomUUID(),
-          ...babyData,
-        };
-
-        state.babies.push(newBaby);
-        state.activeBabyId = newBaby.id;
-      }
-
-      state.onboarding.step = 0;
-      state.onboarding.draft = { ...emptyDraft };
+      state.onboarding = createInitialOnboardingState();
     },
 
-    setActiveBaby: (
-      state,
-      action: PayloadAction<string>
-    ) => {
-      state.activeBabyId = action.payload;
+    setActiveBaby: (state, action: PayloadAction<string>) => {
+      const babyExists = state.babies.some(
+        (baby) => baby.id === action.payload,
+      );
+
+      if (babyExists) {
+        state.activeBabyId = action.payload;
+      }
     },
 
     clearBabyState: (state) => {
+      state.babies = [];
+      state.activeBabyId = null;
+
+      state.onboarding = createInitialOnboardingState();
+    },
+  },
+
+  extraReducers: (builder) => {
+    builder
+      .addCase(registerAccount.fulfilled, (state, action) => {
+        state.babies = action.payload.babies;
+
+        state.activeBabyId = action.payload.babies[0]?.id ?? null;
+
+        state.onboarding = createInitialOnboardingState();
+      })
+
+      .addCase(signInAccount.fulfilled, (state, action) => {
+        const previousActiveBabyId = state.activeBabyId;
+
+        state.babies = action.payload.babies;
+
+        const activeBabyStillExists = state.babies.some(
+          (baby) => baby.id === previousActiveBabyId,
+        );
+
+        state.activeBabyId = activeBabyStillExists
+          ? previousActiveBabyId
+          : (state.babies[0]?.id ?? null);
+
+        state.onboarding = createInitialOnboardingState();
+      })
+
+      .addCase(signOutUser, (state) => {
         state.babies = [];
         state.activeBabyId = null;
-      
-        state.onboarding = {
-          mode: "create",
-          step: 0,
-          draft: { ...emptyDraft },
-        };
-      },
+
+        state.onboarding = createInitialOnboardingState();
+      })
+
+      .addCase(restoreSession.fulfilled, (state, action) => {
+        state.babies = action.payload.babies;
+
+        const activeBabyStillExists = action.payload.babies.some(
+          (baby) => baby.id === state.activeBabyId,
+        );
+
+        state.activeBabyId = activeBabyStillExists
+          ? state.activeBabyId
+          : (action.payload.babies[0]?.id ?? null);
+      });
   },
 });
 
@@ -192,7 +215,7 @@ export const {
   previousOnboardingStep,
   finishOnboarding,
   setActiveBaby,
-  clearBabyState
+  clearBabyState,
 } = babySlice.actions;
 
 export default babySlice.reducer;

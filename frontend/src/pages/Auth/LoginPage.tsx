@@ -1,37 +1,51 @@
 import { useState, type FormEvent } from "react";
+
 import {
+  Alert,
   Box,
   Button,
+  CircularProgress,
   Paper,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
-import { Link, useNavigate } from "react-router-dom";
 
+import { Link, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { signInUser } from "../../store/slices/authSlice";
-import { startOnboarding } from "../../store/slices/babySlice";
+import { clearAuthError, signInAccount } from "../../store/slices/authSlice";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const babies = useAppSelector((state) => state.babies.babies);
-
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const handleSubmit = (event: FormEvent) => {
+  const { status, error } = useAppSelector((state) => state.auth);
+
+  const [email, setEmail] = useState("");
+
+  const [password, setPassword] = useState("");
+
+  const isLoading = status === "loading";
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    dispatch(signInUser({ email }));
+    dispatch(clearAuthError());
 
-    if (babies.length === 0) {
-      dispatch(startOnboarding("create"));
-      navigate("/onboarding", { replace: true });
-      return;
+    try {
+      await dispatch(
+        signInAccount({
+          email: email.trim(),
+          password,
+        }),
+      ).unwrap();
+
+      navigate("/", {
+        replace: true,
+      });
+    } catch (error) {
+      console.error("Login failed:", error);
     }
-
-    navigate("/", { replace: true });
   };
 
   return (
@@ -54,31 +68,66 @@ export default function LoginPage() {
       >
         <Stack spacing={3}>
           <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700 }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+              }}
+            >
               Welcome back
             </Typography>
 
-            <Typography color="text.secondary" sx={{ mt: 1 }}>
+            <Typography
+              sx={{
+                mt: 1,
+                color: "text.secondary",
+              }}
+            >
               Sign in to continue to LullaTrack.
             </Typography>
           </Box>
+
+          {error && <Alert severity="error">{error}</Alert>}
 
           <TextField
             label="Email"
             type="email"
             value={email}
+            autoComplete="email"
+            disabled={isLoading}
             onChange={(event) => setEmail(event.target.value)}
             required
             fullWidth
           />
-
-          <TextField label="Password" type="password" required fullWidth />
-          {/* TODO: happy path for now, using dummy data */}
-          <Button type="submit" variant="contained" size="large">
-            Sign in
+          <TextField
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete="current-password"
+            required
+            fullWidth
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            size="large"
+            disabled={isLoading}
+            startIcon={
+              isLoading ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : undefined
+            }
+          >
+            {isLoading ? "Signing in…" : "Sign in"}
           </Button>
 
-          <Typography variant="body2" sx={{ textAlign: "center" }}>
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: "center",
+            }}
+          >
             New to LullaTrack? <Link to="/register">Register</Link>
           </Typography>
         </Stack>

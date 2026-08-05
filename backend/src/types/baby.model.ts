@@ -1,8 +1,8 @@
 import type { Timestamp } from "firebase-admin/firestore";
 
-export type BabyGender = "boy" | "girl" | "other";
+export type BabyGender = "boy" | "girl";
 
-export type FeedingMethod = "breastfeeding" | "bottle" | "mixed";
+export type FeedingMethod = "breastfeeding" | "bottle" | "combination";
 
 export type Baby = {
   id: string;

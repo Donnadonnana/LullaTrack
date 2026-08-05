@@ -4,7 +4,7 @@ export type FeedingType = "breastfeeding" | "bottle";
 
 export type BreastSide = "left" | "right" | "both" | "";
 
-export type BottleMilkType = "breast-milk" | "formula" | "mixed" | "";
+export type BottleMilkType = "breast-milk" | "formula" | "combination" | "";
 
 type FeedingLogBase = {
   id: string;

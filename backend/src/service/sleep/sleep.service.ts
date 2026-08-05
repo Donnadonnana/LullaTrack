@@ -69,6 +69,7 @@ export class SleepService {
       asleepTime: "",
       wakeTime: "",
       pickupTime: "",
+      notes: "",
       createdAt: timestamp,
       updatedAt: timestamp,
     });

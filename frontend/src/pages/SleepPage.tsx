@@ -1,14 +1,27 @@
-import { Box, Button, Stack, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Stack,
+  Typography,
+} from "@mui/material";
 
 import BedtimeOutlinedIcon from "@mui/icons-material/BedtimeOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import dayjs from "dayjs";
 
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { addSleepLog, type SleepType } from "../store/slices/sleepSlice";
+
+import {
+  createSleepLog,
+  fetchSleepLogs,
+  type SleepType,
+} from "../store/slices/sleepSlice";
 
 import SleepCard from "../components/SleepCard/SleepCard";
 import WakeWindow from "../components/WakeWindow/WakeWindow";
@@ -26,17 +39,32 @@ export default function SleepPage() {
 
   const { babies, activeBabyId } = useAppSelector((state) => state.babies);
 
+  const { loading, error } = useAppSelector((state) => state.sleep);
+
   const activeBaby = babies.find((baby) => baby.id === activeBabyId);
 
   const activeBabyLogs = useAppSelector((state) =>
-    state.sleep.logs.filter(
-      (log) => log.babyId === activeBabyId && log.date === selectedDate,
-    ),
+    state.sleep.logs
+      .filter((log) => log.babyId === activeBabyId && log.date === selectedDate)
+      .sort((first, second) => first.sleepNumber - second.sleepNumber),
   );
+
+  useEffect(() => {
+    if (!activeBabyId) {
+      return;
+    }
+
+    void dispatch(
+      fetchSleepLogs({
+        babyId: activeBabyId,
+        date: selectedDate,
+      }),
+    );
+  }, [activeBabyId, selectedDate, dispatch]);
 
   const hasNightSleepLog = activeBabyLogs.some((log) => log.type === "night");
 
-  const handleAddSleep = (type: SleepType) => {
+  const handleAddSleep = async (type: SleepType) => {
     if (!activeBabyId) {
       return;
     }
@@ -47,14 +75,18 @@ export default function SleepPage() {
 
     const napCount = activeBabyLogs.filter((log) => log.type === "nap").length;
 
-    dispatch(
-      addSleepLog({
-        babyId: activeBabyId,
-        date: selectedDate,
-        type,
-        sleepNumber: type === "night" ? 1 : napCount + 1,
-      }),
-    );
+    try {
+      await dispatch(
+        createSleepLog({
+          babyId: activeBabyId,
+          date: selectedDate,
+          type,
+          sleepNumber: type === "night" ? 1 : napCount + 1,
+        }),
+      ).unwrap();
+    } catch (error) {
+      console.error("Unable to create sleep log:", error);
+    }
   };
 
   if (!activeBaby) {
@@ -69,7 +101,20 @@ export default function SleepPage() {
           <DateNavigator value={selectedDate} onChange={setSelectedDate} />
         }
       />
-      {activeBabyLogs.length === 0 ? (
+
+      {error && <Alert severity="error">{error}</Alert>}
+
+      {loading && activeBabyLogs.length === 0 ? (
+        <Box
+          sx={{
+            minHeight: 360,
+            display: "grid",
+            placeItems: "center",
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      ) : activeBabyLogs.length === 0 ? (
         <Box
           sx={{
             minHeight: 360,
@@ -138,7 +183,7 @@ export default function SleepPage() {
                 variant="contained"
                 size="large"
                 startIcon={<LightModeOutlinedIcon />}
-                onClick={() => handleAddSleep("nap")}
+                onClick={() => void handleAddSleep("nap")}
               >
                 Add first nap
               </Button>
@@ -147,7 +192,7 @@ export default function SleepPage() {
                 variant="outlined"
                 size="large"
                 startIcon={<DarkModeOutlinedIcon />}
-                onClick={() => handleAddSleep("night")}
+                onClick={() => void handleAddSleep("night")}
               >
                 Add night sleep
               </Button>
@@ -155,7 +200,7 @@ export default function SleepPage() {
           </Stack>
         </Box>
       ) : (
-        <Stack spacing={2}>
+        <Stack spacing={1}>
           {activeBabyLogs.map((log, index) => {
             const previousLog = index > 0 ? activeBabyLogs[index - 1] : null;
 
@@ -184,23 +229,21 @@ export default function SleepPage() {
               alignSelf: "flex-start",
             }}
           >
-            {!hasNightSleepLog && (
-              <Button
-                variant="outlined"
-                size="large"
-                startIcon={<LightModeOutlinedIcon />}
-                onClick={() => handleAddSleep("nap")}
-              >
-                Add another nap
-              </Button>
-            )}
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={<LightModeOutlinedIcon />}
+              onClick={() => void handleAddSleep("nap")}
+            >
+              Add another nap
+            </Button>
 
             {!hasNightSleepLog && (
               <Button
                 variant="outlined"
                 size="large"
                 startIcon={<DarkModeOutlinedIcon />}
-                onClick={() => handleAddSleep("night")}
+                onClick={() => void handleAddSleep("night")}
               >
                 Add night sleep
               </Button>

@@ -6,8 +6,8 @@ export interface RegisterUserProfile {
 export interface RegisterBaby {
   name: string;
   dateOfBirth: string;
-  gender: "male" | "female" | "other";
-  feedingMethod: "breastfeeding" | "formula" | "combination" | "other";
+  gender: "boy" | "girl";
+  feedingMethod: "breastfeeding" | "formula" | "combination";
 }
 
 export interface RegisterRequest {
