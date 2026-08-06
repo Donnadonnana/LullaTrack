@@ -1,4 +1,4 @@
-import { Box, Chip, Stack } from "@mui/material";
+import { Box, Chip, Stack, Typography } from "@mui/material";
 
 import WbSunnyOutlinedIcon from "@mui/icons-material/WbSunnyOutlined";
 
@@ -17,7 +17,7 @@ export default function WakeWindow({ durationMinutes }: WakeWindowProps) {
         justifyContent: "center",
         gap: 1.5,
         py: 1,
-        mb: 1
+        mb: 1,
       }}
     >
       <Box
@@ -27,20 +27,37 @@ export default function WakeWindow({ durationMinutes }: WakeWindowProps) {
           bgcolor: "divider",
         }}
       />
-
-      <Chip
-        icon={<WbSunnyOutlinedIcon />}
-        label={`Awake for ${formatDuration(durationMinutes)}`}
-        variant="outlined"
+      <Typography
         sx={{
-          bgcolor: "background.paper",
-
-          "& .MuiChip-label": {
-            fontWeight: 600,
-          },
+          fontSize: 25,
+          color: "lightGrey",
+        }}
+      >
+        {" "}
+        -{" "}
+      </Typography>
+      <WbSunnyOutlinedIcon
+        sx={{
+          fontSize: 25,
+          color: "lightGrey",
         }}
       />
-
+      <Typography
+        sx={{
+          color: "grey",
+        }}
+      >
+        Awake for {formatDuration(durationMinutes)}{" "}
+      </Typography>{" "}
+      <Typography
+        sx={{
+          fontSize: 25,
+          color: "lightGrey",
+        }}
+      >
+        {" "}
+        -{" "}
+      </Typography>
       <Box
         sx={{
           flexGrow: 1,
