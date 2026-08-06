@@ -63,11 +63,8 @@ export default function TimeInput({
 }: TimeInputProps) {
   const theme = useTheme();
   const inputRef = useRef<HTMLInputElement>(null);
-
   const [digits, setDigits] = useState(() => timeToDigits(value));
-
   const [isFocused, setIsFocused] = useState(false);
-
   const [internalError, setInternalError] = useState(false);
 
   useEffect(() => {
@@ -80,11 +77,8 @@ export default function TimeInput({
 
   const hours = digits.slice(0, 2);
   const minutes = digits.slice(2, 4);
-
   const displayedHours = hours.padEnd(2, "–");
-
   const displayedMinutes = minutes.padEnd(2, "–");
-
   const hasError = error || internalError;
 
   const borderColor = useMemo(() => {
@@ -176,7 +170,6 @@ export default function TimeInput({
           minWidth: inline ? 68 : undefined,
           textAlign: inline ? "right" : "left",
           whiteSpace: "nowrap",
-          fontSize: inline ? "0.75rem" : undefined,
           flexShrink: 0,
         }}
       >
@@ -204,7 +197,7 @@ export default function TimeInput({
               placeItems: "center",
               border: 1,
               borderColor,
-              borderRadius: inline ? 1.5 : 2,
+              borderRadius: 1,
               bgcolor: "background.paper",
               transition: "border-color 150ms ease",
             }}
@@ -240,7 +233,7 @@ export default function TimeInput({
               placeItems: "center",
               border: 1,
               borderColor,
-              borderRadius: inline ? 1.5 : 2,
+              borderRadius: 1,
               bgcolor: "background.paper",
               transition: "border-color 150ms ease",
             }}

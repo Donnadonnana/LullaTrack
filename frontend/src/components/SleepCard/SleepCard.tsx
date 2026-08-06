@@ -107,12 +107,8 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
   }, [draft, log]);
 
   const sleepDuration = calculateDuration(draft.asleepTime, draft.wakeTime);
-
   const isNap = log.type === "nap";
-
   const sleepTitle = isNap ? `Nap ${log.sleepNumber}` : "Night sleep";
-
-  const complete = isSleepComplete(draft);
 
   const updateField = (field: keyof SleepDraft, value: string) => {
     setDraft((current) => ({
@@ -163,7 +159,7 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
       variant="outlined"
       sx={{
         overflow: "visible",
-        borderRadius: 3,
+        borderRadius: 1,
       }}
     >
       <CardContent
@@ -209,14 +205,14 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                 {isNap ? (
                   <LightModeOutlinedIcon
                     sx={{
-                      fontSize: 18,
+                      fontSize: 25,
                       color: "warning.main",
                     }}
                   />
                 ) : (
                   <DarkModeOutlinedIcon
                     sx={{
-                      fontSize: 18,
+                      fontSize: 25,
                       color: "primary.main",
                     }}
                   />
@@ -230,6 +226,7 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                   sx={{
                     alignItems: "center",
                     flexWrap: "wrap",
+                    m: 1,
                   }}
                 >
                   <Typography
@@ -244,7 +241,6 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                   {!isExpanded && sleepDuration !== null && (
                     <>
                       <Typography
-                        variant="caption"
                         sx={{
                           color: "text.secondary",
                         }}
@@ -253,7 +249,6 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                       </Typography>
 
                       <Typography
-                        variant="caption"
                         sx={{
                           color: "text.secondary",
                         }}
@@ -262,7 +257,6 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                       </Typography>
 
                       <Typography
-                        variant="caption"
                         sx={{
                           color: "text.secondary",
                         }}
@@ -271,7 +265,6 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                       </Typography>
 
                       <Typography
-                        variant="caption"
                         sx={{
                           fontWeight: 700,
                           color: "text.primary",
@@ -288,6 +281,8 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                     variant="caption"
                     noWrap
                     sx={{
+                      ml: 1,
+                      mb: 1,
                       display: "block",
                       color: "text.secondary",
                       maxWidth: {
@@ -399,11 +394,10 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                 sx={{
                   alignSelf: "flex-start",
                   border: 0,
-                  p: 0,
+                  pl: 1,
                   bgcolor: "transparent",
                   color: "primary.main",
                   font: "inherit",
-                  fontWeight: 600,
                   cursor: "pointer",
                 }}
               >
@@ -440,8 +434,8 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                 <Box>
                   {sleepDuration !== null && (
                     <Typography
-                      variant="caption"
                       sx={{
+                        pl: 1,
                         color: "text.secondary",
                       }}
                     >
@@ -462,7 +456,6 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
 
                 <Button
                   size="small"
-                  variant="contained"
                   disabled={!hasChanges || isSaving || isDeleting}
                   onClick={() => void handleSave()}
                   startIcon={
@@ -471,11 +464,7 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                     ) : undefined
                   }
                 >
-                  {isSaving
-                    ? "Saving…"
-                    : complete
-                      ? "Save and collapse"
-                      : "Save"}
+                  {isSaving ? "Saving…" : "Save"}
                 </Button>
               </Stack>
             </Stack>
