@@ -3,7 +3,12 @@ import {
   createSlice,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-import { getCurrentUser, loginUser, registerUser } from "../../api/authApi";
+import {
+  getCurrentUser,
+  loginUser,
+  registerUser,
+  refreshAuthToken,
+} from "../../api/authApi";
 import type { RootState } from "../store";
 import type { LoginRequest, RegisterRequest, User } from "../../types/auth";
 import type { Baby } from "./babySlice";
@@ -147,6 +152,32 @@ function saveSession(session: AuthSession) {
   );
 }
 
+export const refreshSession = createAsyncThunk<
+  {
+    idToken: string;
+    refreshToken: string;
+    expiresAt: number;
+  },
+  void,
+  {
+    state: RootState;
+  }
+>("auth/refreshSession", async (_, thunkApi) => {
+  const refreshToken = thunkApi.getState().auth.refreshToken;
+
+  if (!refreshToken) {
+    throw new Error("No refresh token.");
+  }
+
+  const session = await refreshAuthToken(refreshToken);
+
+  return {
+    idToken: session.idToken,
+    refreshToken: session.refreshToken,
+    expiresAt: Date.now() + session.expiresIn * 1000,
+  };
+});
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -256,6 +287,41 @@ const authSlice = createSlice({
         state.error = null;
 
         saveSession(action.payload);
+      })
+
+      .addCase(refreshSession.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+
+      .addCase(refreshSession.fulfilled, (state, action) => {
+        state.idToken = action.payload.idToken;
+        state.refreshToken = action.payload.refreshToken;
+        state.expiresAt = action.payload.expiresAt;
+        state.status = "authenticated";
+        state.error = null;
+        state.initialized = true;
+
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            idToken: action.payload.idToken,
+            refreshToken: action.payload.refreshToken,
+            expiresAt: action.payload.expiresAt,
+          }),
+        );
+      })
+
+      .addCase(refreshSession.rejected, (state) => {
+        // NOW it is appropriate to log the user out.
+        state.user = null;
+        state.idToken = null;
+        state.refreshToken = null;
+        state.expiresAt = null;
+        state.status = "idle";
+        state.initialized = true;
+
+        localStorage.removeItem(STORAGE_KEY);
       });
   },
 });

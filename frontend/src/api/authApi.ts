@@ -28,3 +28,43 @@ export function getCurrentUser(idToken: string): Promise<GetMeResponse> {
     token: idToken,
   });
 }
+const FIREBASE_API_KEY = import.meta.env.VITE_FIREBASE_API_KEY;
+
+type RefreshTokenResponse = {
+  id_token: string;
+  refresh_token: string;
+  expires_in: string;
+  user_id: string;
+};
+
+export async function refreshAuthToken(refreshToken: string): Promise<{
+  idToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}> {
+  const response = await fetch(
+    `https://securetoken.googleapis.com/v1/token?key=${FIREBASE_API_KEY}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Unable to refresh authentication token.");
+  }
+
+  const data = (await response.json()) as RefreshTokenResponse;
+
+  return {
+    idToken: data.id_token,
+    refreshToken: data.refresh_token,
+    expiresIn: Number(data.expires_in),
+  };
+}
