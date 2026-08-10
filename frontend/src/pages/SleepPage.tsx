@@ -292,7 +292,7 @@ export default function SleepPage() {
                 onClick={() => void handleAddSleep("wake")}
                 sx={{
                   borderRadius: 999,
-                  bgcolor: DAWN,
+                  bgcolor: nursery.dawn,
                   "&:hover": { bgcolor: "#C96F55" },
                 }}
               >

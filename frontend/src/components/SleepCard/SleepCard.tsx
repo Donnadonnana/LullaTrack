@@ -35,19 +35,6 @@ import SleepTimeInput from "../SleepTimeInput/SleepTimeInput";
 
 import { calculateDuration, formatDuration } from "../../utils/time";
 
-// Cozy nursery palette — keep in sync with SleepPage.tsx / WakeWindow.tsx
-const INK = "#3A3450";
-const INK_SOFT = "#8B8398";
-const INK_FAINT = "#C3BCC9";
-const BORDER = "#EEE3D8";
-const SURFACE = "#FFFFFF";
-const MOON = "#6C63AC";
-const MOON_TINT = "rgba(108, 99, 172, 0.10)";
-const SUN = "#E1963C";
-const SUN_TINT = "rgba(225, 150, 60, 0.12)";
-const DAWN = "#E0876B";
-const DAWN_TINT = "rgba(224, 135, 107, 0.14)";
-const ROSE = "#C97B78";
 const FONT_DISPLAY = "'Fraunces', Georgia, serif";
 
 type SleepCardProps = {
@@ -76,6 +63,7 @@ function isLogComplete(type: SleepLog["type"], sleep: SleepDraft): boolean {
 
 export default function SleepCard({ log, babyName }: SleepCardProps) {
   const dispatch = useAppDispatch();
+  const { nursery } = useTheme().palette;
 
   const isSaving = useAppSelector((state) =>
     state.sleep.savingIds.includes(log.id),
@@ -141,8 +129,12 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
       ? `Nap ${log.sleepNumber}`
       : "Night sleep";
 
-  const accent = isWake ? DAWN : isNap ? SUN : MOON;
-  const accentTint = isWake ? DAWN_TINT : isNap ? SUN_TINT : MOON_TINT;
+  const accent = isWake ? nursery.dawn : isNap ? nursery.sun : nursery.moon;
+  const accentTint = isWake
+    ? nursery.dawnTint
+    : isNap
+      ? nursery.sunTint
+      : nursery.moonTint;
   const accentHover = isWake ? "#C96F55" : isNap ? "#CC8530" : "#5A5296";
 
   // Night sleep has no same-day wake time, so there's no duration to show —
@@ -205,8 +197,6 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
       sx={{
         overflow: "visible",
         borderRadius: 4,
-        borderColor: BORDER,
-        bgcolor: SURFACE,
         boxShadow: isExpanded ? "0 8px 24px rgba(58, 52, 80, 0.06)" : "none",
         transition: "box-shadow 0.2s ease",
       }}
@@ -265,7 +255,7 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                       fontFamily: FONT_DISPLAY,
                       fontWeight: 600,
                       fontSize: 17,
-                      color: INK,
+                      color: "text.primary",
                     }}
                   >
                     {sleepTitle}
@@ -276,11 +266,17 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                     durationValue !== null &&
                     !isWake && (
                       <>
-                        <Typography sx={{ color: INK_FAINT }}>·</Typography>
-                        <Typography sx={{ color: INK_SOFT, fontSize: 14 }}>
+                        <Typography sx={{ color: "text.disabled" }}>
+                          ·
+                        </Typography>
+                        <Typography
+                          sx={{ color: "text.secondary", fontSize: 14 }}
+                        >
                           {rangeStart}–{rangeEnd}
                         </Typography>
-                        <Typography sx={{ color: INK_FAINT }}>·</Typography>
+                        <Typography sx={{ color: "text.disabled" }}>
+                          ·
+                        </Typography>
                         <Typography
                           sx={{
                             fontFamily: FONT_DISPLAY,
@@ -310,8 +306,12 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                     draft.onBedTime &&
                     draft.asleepTime && (
                       <>
-                        <Typography sx={{ color: INK_FAINT }}>·</Typography>
-                        <Typography sx={{ color: INK_SOFT, fontSize: 14 }}>
+                        <Typography sx={{ color: "text.disabled" }}>
+                          ·
+                        </Typography>
+                        <Typography
+                          sx={{ color: "text.secondary", fontSize: 14 }}
+                        >
                           Down {draft.onBedTime} · Asleep {draft.asleepTime}
                         </Typography>
                       </>
@@ -324,7 +324,7 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                     noWrap
                     sx={{
                       display: "block",
-                      color: INK_SOFT,
+                      color: "text.secondary",
                       maxWidth: { xs: 180, sm: 420 },
                     }}
                   >
@@ -344,8 +344,8 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                   label="Unsaved"
                   size="small"
                   sx={{
-                    bgcolor: SUN_TINT,
-                    color: SUN,
+                    bgcolor: nursery.sunTint,
+                    color: nursery.sun,
                     fontWeight: 700,
                     border: "none",
                   }}
@@ -356,7 +356,7 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                 <IconButton
                   size="small"
                   onClick={() => setIsExpanded((current) => !current)}
-                  sx={{ color: INK_SOFT }}
+                  sx={{ color: "text.secondary" }}
                 >
                   {isExpanded ? (
                     <ExpandLessRoundedIcon fontSize="small" />
@@ -371,10 +371,10 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                   size="small"
                   disabled={isDeleting}
                   onClick={() => void handleDelete()}
-                  sx={{ color: ROSE }}
+                  sx={{ color: nursery.rose }}
                 >
                   {isDeleting ? (
-                    <CircularProgress size={18} sx={{ color: ROSE }} />
+                    <CircularProgress size={18} sx={{ color: nursery.rose }} />
                   ) : (
                     <DeleteOutlineRoundedIcon fontSize="small" />
                   )}
@@ -479,7 +479,7 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                   border: 0,
                   p: 0,
                   bgcolor: "transparent",
-                  color: MOON,
+                  color: nursery.moon,
                   fontSize: 13,
                   fontWeight: 700,
                   cursor: "pointer",
@@ -512,14 +512,13 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
               >
                 <Box>
                   {!isNight && durationValue !== null && (
-                    <Typography sx={{ color: INK_SOFT, fontSize: 14 }}>
+                    <Typography sx={{ color: "text.secondary", fontSize: 14 }}>
                       {durationLabel}{" "}
                       <Box
                         component="span"
                         sx={{
                           fontFamily: FONT_DISPLAY,
                           fontWeight: 600,
-                          color: INK,
                         }}
                       >
                         {formatDuration(durationValue)}
@@ -529,14 +528,14 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                   )}
 
                   {isNight && draft.onBedTime && draft.asleepTime && (
-                    <Typography sx={{ color: INK_SOFT, fontSize: 14 }}>
+                    <Typography sx={{ color: "text.secondary", fontSize: 14 }}>
                       Down at{" "}
                       <Box
                         component="span"
                         sx={{
                           fontFamily: FONT_DISPLAY,
                           fontWeight: 600,
-                          color: INK,
+                          color: "text.primary",
                         }}
                       >
                         {draft.onBedTime}

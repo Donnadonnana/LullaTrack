@@ -1,4 +1,4 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography, useTheme } from "@mui/material";
 
 import NightlightRoundedIcon from "@mui/icons-material/NightlightRounded";
 
@@ -14,13 +14,6 @@ type DaySummaryProps = {
   avgAwakeBeforePickupMinutes: number | null;
 };
 
-// Cozy nursery palette — keep in sync with the other sleep components
-const INK = "#3A3450";
-const INK_SOFT = "#8B8398";
-const MOON = "#6C63AC";
-const SUN = "#E1963C";
-const MOON_TINT = "rgba(108, 99, 172, 0.10)";
-const SUN_TINT = "rgba(225, 150, 60, 0.12)";
 const FONT_DISPLAY = "'Fraunces', Georgia, serif";
 
 function StatItem({ label, value }: { label: string; value: string }) {
@@ -31,13 +24,15 @@ function StatItem({ label, value }: { label: string; value: string }) {
           fontFamily: FONT_DISPLAY,
           fontWeight: 600,
           fontSize: 18,
-          color: INK,
+          color: "text.primary",
           lineHeight: 1.3,
         }}
       >
         {value}
       </Typography>
-      <Typography sx={{ color: INK_SOFT, fontSize: 12 }}>{label}</Typography>
+      <Typography sx={{ color: "text.secondary", fontSize: 12 }}>
+        {label}
+      </Typography>
     </Box>
   );
 }
@@ -52,13 +47,15 @@ export default function DaySummary({
   avgAwakeBeforePickupMinutes,
 }: DaySummaryProps) {
   const hasNaps = napCount > 0;
+  const theme = useTheme();
+  const { nursery } = theme.palette;
 
   return (
     <Box
       sx={{
-        borderRadius: 2,
+        borderRadius: 4,
         p: 2.5,
-        background: `linear-gradient(135deg, ${MOON_TINT}, ${SUN_TINT})`,
+        background: `linear-gradient(135deg, ${nursery.moonTint}, ${nursery.sunTint})`,
       }}
     >
       <Stack spacing={2}>
@@ -74,7 +71,7 @@ export default function DaySummary({
               bgcolor: "rgba(255, 255, 255, 0.6)",
             }}
           >
-            <NightlightRoundedIcon sx={{ fontSize: 24, color: MOON }} />
+            <NightlightRoundedIcon sx={{ fontSize: 24, color: nursery.moon }} />
           </Box>
 
           <Box sx={{ minWidth: 0 }}>
@@ -83,14 +80,17 @@ export default function DaySummary({
                 fontFamily: FONT_DISPLAY,
                 fontWeight: 500,
                 fontSize: { xs: 15, sm: 17 },
-                color: INK,
+                color: "text.primary",
                 lineHeight: 1.4,
               }}
             >
               {hasNaps ? (
                 <>
                   {babyName} had{" "}
-                  <Box component="span" sx={{ fontWeight: 700, color: SUN }}>
+                  <Box
+                    component="span"
+                    sx={{ fontWeight: 700, color: nursery.sun }}
+                  >
                     {napCount} {napCount === 1 ? "nap" : "naps"}
                   </Box>{" "}
                   today.
@@ -100,7 +100,9 @@ export default function DaySummary({
               )}
             </Typography>
 
-            <Typography sx={{ color: INK_SOFT, fontSize: 13, mt: 0.25 }}>
+            <Typography
+              sx={{ color: "text.secondary", fontSize: 13, mt: 0.25 }}
+            >
               Day's naps are done — night sleep is logged.
             </Typography>
           </Box>

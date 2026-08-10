@@ -1,4 +1,4 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography, useTheme } from "@mui/material";
 
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 
@@ -11,11 +11,6 @@ type LastNightSummaryProps = {
   wakeTime: string;
 };
 
-// Cozy nursery palette — keep in sync with the other sleep components
-const INK = "#3A3450";
-const INK_SOFT = "#8B8398";
-const MOON = "#6C63AC";
-const MOON_TINT = "rgba(108, 99, 172, 0.10)";
 const FONT_DISPLAY = "'Fraunces', Georgia, serif";
 
 export default function LastNightSummary({
@@ -24,12 +19,15 @@ export default function LastNightSummary({
   asleepTime,
   wakeTime,
 }: LastNightSummaryProps) {
+  const theme = useTheme();
+  const { nursery } = theme.palette;
+
   return (
     <Box
       sx={{
         borderRadius: 4,
         p: 2,
-        bgcolor: MOON_TINT,
+        bgcolor: nursery.moonTint,
       }}
     >
       <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
@@ -44,7 +42,7 @@ export default function LastNightSummary({
             bgcolor: "rgba(255, 255, 255, 0.6)",
           }}
         >
-          <DarkModeRoundedIcon sx={{ fontSize: 20, color: MOON }} />
+          <DarkModeRoundedIcon sx={{ fontSize: 20, color: nursery.moon }} />
         </Box>
 
         <Box sx={{ minWidth: 0 }}>
@@ -53,17 +51,17 @@ export default function LastNightSummary({
               fontFamily: FONT_DISPLAY,
               fontWeight: 600,
               fontSize: 15,
-              color: INK,
+              color: "text.primary",
             }}
           >
             {babyName} slept{" "}
-            <Box component="span" sx={{ color: MOON }}>
+            <Box component="span" sx={{ color: nursery.moon }}>
               {formatDuration(totalMinutes)}
             </Box>{" "}
             last night
           </Typography>
 
-          <Typography sx={{ color: INK_SOFT, fontSize: 13 }}>
+          <Typography sx={{ color: "text.secondary", fontSize: 13 }}>
             {asleepTime} – {wakeTime}
           </Typography>
         </Box>
