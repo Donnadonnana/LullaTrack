@@ -1,4 +1,4 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography, useTheme } from "@mui/material";
 import WbSunnyRoundedIcon from "@mui/icons-material/WbSunnyRounded";
 
 import { formatDuration } from "../../utils/time";
@@ -7,11 +7,10 @@ type WakeWindowProps = {
   durationMinutes: number;
 };
 
-const SAGE = "#7E9680";
-const SAGE_TINT = "rgba(126, 150, 128, 0.12)";
-const THREAD = "#E4DACD";
-
 export default function WakeWindow({ durationMinutes }: WakeWindowProps) {
+  const theme = useTheme();
+  const { sage, sageTint, thread } = theme.palette.nursery;
+
   return (
     <Stack
       direction="row"
@@ -24,7 +23,7 @@ export default function WakeWindow({ durationMinutes }: WakeWindowProps) {
       <Box
         sx={{
           flexGrow: 1,
-          borderTop: `1px dashed ${THREAD}`,
+          borderTop: `1px dashed ${thread}`,
         }}
       />
 
@@ -37,16 +36,16 @@ export default function WakeWindow({ durationMinutes }: WakeWindowProps) {
           px: 1.5,
           py: 0.5,
           borderRadius: 999,
-          bgcolor: SAGE_TINT,
+          bgcolor: sageTint,
           flexShrink: 0,
         }}
       >
-        <WbSunnyRoundedIcon sx={{ fontSize: 15, color: SAGE }} />
+        <WbSunnyRoundedIcon sx={{ fontSize: 15, color: sage }} />
         <Typography
           sx={{
             fontSize: 13,
             fontWeight: 700,
-            color: SAGE,
+            color: sage,
             fontFamily: "'Nunito', sans-serif",
             whiteSpace: "nowrap",
           }}
@@ -58,7 +57,7 @@ export default function WakeWindow({ durationMinutes }: WakeWindowProps) {
       <Box
         sx={{
           flexGrow: 1,
-          borderTop: `1px dashed ${THREAD}`,
+          borderTop: `1px dashed ${thread}`,
         }}
       />
     </Stack>

@@ -5,6 +5,7 @@ import {
   CircularProgress,
   Stack,
   Typography,
+  useTheme,
 } from "@mui/material";
 
 import BedtimeRoundedIcon from "@mui/icons-material/BedtimeRounded";
@@ -38,16 +39,6 @@ import {
   calculateWakeWindow,
 } from "../utils/time";
 
-// Cozy nursery palette — keep in sync with SleepCard.tsx / WakeWindow.tsx
-const INK = "#3A3450";
-const INK_SOFT = "#8B8398";
-const BORDER = "#EEE3D8";
-const MOON = "#6C63AC";
-const MOON_TINT = "rgba(108, 99, 172, 0.10)";
-const SUN = "#E1963C";
-const SUN_TINT = "rgba(225, 150, 60, 0.12)";
-const DAWN = "#E0876B";
-const DAWN_TINT = "rgba(224, 135, 107, 0.14)";
 const FONT_DISPLAY = "'Fraunces', Georgia, serif";
 
 // The list should read as a timeline, not a creation-order list — so we sort
@@ -75,7 +66,7 @@ function average(values: number[]): number | null {
 
 export default function SleepPage() {
   const dispatch = useAppDispatch();
-
+  const { nursery } = useTheme().palette;
   const [selectedDate, setSelectedDate] = useState(
     dayjs().format("YYYY-MM-DD"),
   );
@@ -242,18 +233,19 @@ export default function SleepPage() {
 
       {loading && activeBabyLogs.length === 0 ? (
         <Box sx={{ minHeight: 360, display: "grid", placeItems: "center" }}>
-          <CircularProgress sx={{ color: MOON }} />
+          <CircularProgress color="primary" />
         </Box>
       ) : activeBabyLogs.length === 0 ? (
         <Box
           sx={{
             minHeight: 360,
-            border: `1px dashed ${BORDER}`,
+            border: "1px dashed",
+            borderColor: "divider",
             borderRadius: 5,
             display: "grid",
             placeItems: "center",
             p: 4,
-            bgcolor: "rgba(225, 150, 60, 0.04)",
+            bgcolor: nursery.emptyStateBg,
           }}
         >
           <Stack
@@ -267,10 +259,10 @@ export default function SleepPage() {
                 borderRadius: "50%",
                 display: "grid",
                 placeItems: "center",
-                background: `linear-gradient(135deg, ${DAWN_TINT}, ${SUN_TINT})`,
+                background: `linear-gradient(135deg, ${nursery.dawnTint}, ${nursery.sunTint})`,
               }}
             >
-              <BedtimeRoundedIcon sx={{ fontSize: 36, color: MOON }} />
+              <BedtimeRoundedIcon sx={{ fontSize: 36, color: nursery.moon }} />
             </Box>
 
             <Box>
@@ -279,13 +271,13 @@ export default function SleepPage() {
                   fontFamily: FONT_DISPLAY,
                   fontWeight: 600,
                   fontSize: 22,
-                  color: INK,
+                  color: "text.primary",
                 }}
               >
                 Start the day
               </Typography>
 
-              <Typography sx={{ color: INK_SOFT, mt: 0.75 }}>
+              <Typography sx={{ color: "text.secondary", mt: 0.75 }}>
                 Log what time {activeBaby.name} woke up this morning — that's
                 the start of today's timeline.
               </Typography>
@@ -313,10 +305,12 @@ export default function SleepPage() {
                   startIcon={<LightModeRoundedIcon />}
                   onClick={() => void handleAddSleep("nap")}
                   sx={{
-                    borderRadius: 999,
-                    borderColor: SUN,
-                    color: SUN,
-                    "&:hover": { borderColor: SUN, bgcolor: SUN_TINT },
+                    borderColor: nursery.sun,
+                    color: nursery.sun,
+                    "&:hover": {
+                      borderColor: nursery.sun,
+                      bgcolor: nursery.sunTint,
+                    },
                   }}
                 >
                   Add a nap instead
@@ -327,10 +321,12 @@ export default function SleepPage() {
                   startIcon={<DarkModeRoundedIcon />}
                   onClick={() => void handleAddSleep("night")}
                   sx={{
-                    borderRadius: 999,
-                    borderColor: MOON,
-                    color: MOON,
-                    "&:hover": { borderColor: MOON, bgcolor: MOON_TINT },
+                    borderColor: nursery.moon,
+                    color: nursery.moon,
+                    "&:hover": {
+                      borderColor: nursery.moon,
+                      bgcolor: nursery.moonTint,
+                    },
                   }}
                 >
                   Log night sleep
@@ -370,10 +366,12 @@ export default function SleepPage() {
                 startIcon={<WbTwilightRoundedIcon />}
                 onClick={() => void handleAddSleep("wake")}
                 sx={{
-                  borderRadius: 999,
-                  borderColor: DAWN,
-                  color: DAWN,
-                  "&:hover": { borderColor: DAWN, bgcolor: DAWN_TINT },
+                  borderColor: nursery.dawn,
+                  color: nursery.dawn,
+                  "&:hover": {
+                    borderColor: nursery.dawn,
+                    bgcolor: nursery.dawnTint,
+                  },
                 }}
               >
                 Add wake-up time
@@ -385,10 +383,12 @@ export default function SleepPage() {
               startIcon={<LightModeRoundedIcon />}
               onClick={() => void handleAddSleep("nap")}
               sx={{
-                borderRadius: 999,
-                borderColor: SUN,
-                color: SUN,
-                "&:hover": { borderColor: SUN, bgcolor: SUN_TINT },
+                borderColor: nursery.sun,
+                color: nursery.sun,
+                "&:hover": {
+                  borderColor: nursery.sun,
+                  bgcolor: nursery.sunTint,
+                },
               }}
             >
               Add another nap
@@ -400,10 +400,12 @@ export default function SleepPage() {
                 startIcon={<DarkModeRoundedIcon />}
                 onClick={() => void handleAddSleep("night")}
                 sx={{
-                  borderRadius: 999,
-                  borderColor: MOON,
-                  color: MOON,
-                  "&:hover": { borderColor: MOON, bgcolor: MOON_TINT },
+                  borderColor: nursery.moon,
+                  color: nursery.moon,
+                  "&:hover": {
+                    borderColor: nursery.moon,
+                    bgcolor: nursery.moonTint,
+                  },
                 }}
               >
                 Add night sleep
