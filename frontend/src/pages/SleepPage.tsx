@@ -378,21 +378,23 @@ export default function SleepPage() {
               </Button>
             )}
 
-            <Button
-              variant="outlined"
-              startIcon={<LightModeRoundedIcon />}
-              onClick={() => void handleAddSleep("nap")}
-              sx={{
-                borderColor: nursery.sun,
-                color: nursery.sun,
-                "&:hover": {
+            {!hasNightSleepLog && (
+              <Button
+                variant="outlined"
+                startIcon={<LightModeRoundedIcon />}
+                onClick={() => void handleAddSleep("nap")}
+                sx={{
                   borderColor: nursery.sun,
-                  bgcolor: nursery.sunTint,
-                },
-              }}
-            >
-              Add another nap
-            </Button>
+                  color: nursery.sun,
+                  "&:hover": {
+                    borderColor: nursery.sun,
+                    bgcolor: nursery.sunTint,
+                  },
+                }}
+              >
+                Add another nap
+              </Button>
+            )}
 
             {!hasNightSleepLog && (
               <Button
