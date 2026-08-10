@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 export function formatTimeInput(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 4);
 
@@ -121,4 +123,30 @@ export function calculateFeedingDuration(
   }
 
   return endTotal - startTotal;
+}
+/**
+ * Duration between an evening asleep-time and a next-morning wake-time.
+ * Unlike calculateDuration, this assumes wakeTime is on the day AFTER
+ * asleepTime whenever it's numerically earlier or equal (i.e. crosses midnight).
+ */
+export function calculateOvernightDuration(
+  asleepTime: string,
+  wakeTime: string,
+): number | null {
+  if (!asleepTime || !wakeTime) {
+    return null;
+  }
+
+  const asleep = dayjs(`2000-01-01 ${asleepTime}`);
+  let wake = dayjs(`2000-01-01 ${wakeTime}`);
+
+  if (!asleep.isValid() || !wake.isValid()) {
+    return null;
+  }
+
+  if (!wake.isAfter(asleep)) {
+    wake = wake.add(1, "day");
+  }
+
+  return wake.diff(asleep, "minute");
 }
