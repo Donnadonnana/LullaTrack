@@ -13,11 +13,11 @@ import {
   Typography,
 } from "@mui/material";
 
-import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import ExpandLessOutlinedIcon from "@mui/icons-material/ExpandLessOutlined";
-import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
-import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
+import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
+import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -32,6 +32,19 @@ import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import SleepTimeInput from "../SleepTimeInput/SleepTimeInput";
 
 import { calculateDuration, formatDuration } from "../../utils/time";
+
+// Cozy nursery palette — keep in sync with SleepPage.tsx / WakeWindow.tsx
+const INK = "#3A3450";
+const INK_SOFT = "#8B8398";
+const INK_FAINT = "#C3BCC9";
+const BORDER = "#EEE3D8";
+const SURFACE = "#FFFFFF";
+const MOON = "#6C63AC";
+const MOON_TINT = "rgba(108, 99, 172, 0.10)";
+const SUN = "#E1963C";
+const SUN_TINT = "rgba(225, 150, 60, 0.12)";
+const ROSE = "#C97B78";
+const FONT_DISPLAY = "'Fraunces', Georgia, serif";
 
 type SleepCardProps = {
   log: SleepLog;
@@ -109,6 +122,9 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
   const sleepDuration = calculateDuration(draft.asleepTime, draft.wakeTime);
   const isNap = log.type === "nap";
   const sleepTitle = isNap ? `Nap ${log.sleepNumber}` : "Night sleep";
+  const accent = isNap ? SUN : MOON;
+  const accentTint = isNap ? SUN_TINT : MOON_TINT;
+  const accentHover = isNap ? "#CC8530" : "#5A5296";
 
   const updateField = (field: keyof SleepDraft, value: string) => {
     setDraft((current) => ({
@@ -159,63 +175,51 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
       variant="outlined"
       sx={{
         overflow: "visible",
-        borderRadius: 1,
+        borderRadius: 4,
+        borderColor: BORDER,
+        bgcolor: SURFACE,
+        boxShadow: isExpanded ? "0 8px 24px rgba(58, 52, 80, 0.06)" : "none",
+        transition: "box-shadow 0.2s ease",
       }}
     >
       <CardContent
         sx={{
-          p: isExpanded ? 2 : 1.25,
-
+          p: isExpanded ? 2.5 : 1.5,
           "&:last-child": {
-            pb: isExpanded ? 2 : 1.25,
+            pb: isExpanded ? 2.5 : 1.5,
           },
         }}
       >
-        <Stack spacing={isExpanded ? 1.5 : 0}>
+        <Stack spacing={isExpanded ? 2 : 0}>
           <Stack
             direction="row"
-            spacing={1}
+            spacing={1.5}
             sx={{
               alignItems: "center",
               justifyContent: "space-between",
-              minHeight: 38,
+              minHeight: 40,
             }}
           >
             <Stack
               direction="row"
-              spacing={1}
-              sx={{
-                alignItems: "center",
-                minWidth: 0,
-              }}
+              spacing={1.5}
+              sx={{ alignItems: "center", minWidth: 0 }}
             >
               <Box
                 sx={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 2,
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
                   display: "grid",
                   placeItems: "center",
                   flexShrink: 0,
-                  bgcolor: isNap
-                    ? "rgba(255, 214, 165, 0.25)"
-                    : "rgba(154, 140, 255, 0.18)",
+                  bgcolor: accentTint,
                 }}
               >
                 {isNap ? (
-                  <LightModeOutlinedIcon
-                    sx={{
-                      fontSize: 25,
-                      color: "warning.main",
-                    }}
-                  />
+                  <LightModeRoundedIcon sx={{ fontSize: 20, color: accent }} />
                 ) : (
-                  <DarkModeOutlinedIcon
-                    sx={{
-                      fontSize: 25,
-                      color: "primary.main",
-                    }}
-                  />
+                  <DarkModeRoundedIcon sx={{ fontSize: 20, color: accent }} />
                 )}
               </Box>
 
@@ -223,16 +227,14 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                 <Stack
                   direction="row"
                   spacing={0.75}
-                  sx={{
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                    m: 1,
-                  }}
+                  sx={{ alignItems: "baseline", flexWrap: "wrap" }}
                 >
                   <Typography
                     sx={{
-                      fontWeight: 700,
-                      lineHeight: 1.2,
+                      fontFamily: FONT_DISPLAY,
+                      fontWeight: 600,
+                      fontSize: 17,
+                      color: INK,
                     }}
                   >
                     {sleepTitle}
@@ -240,37 +242,22 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
 
                   {!isExpanded && sleepDuration !== null && (
                     <>
-                      <Typography
-                        sx={{
-                          color: "text.secondary",
-                        }}
-                      >
-                        ·
-                      </Typography>
-
-                      <Typography
-                        sx={{
-                          color: "text.secondary",
-                        }}
-                      >
+                      <Typography sx={{ color: INK_FAINT }}>·</Typography>
+                      <Typography sx={{ color: INK_SOFT, fontSize: 14 }}>
                         {draft.asleepTime}–{draft.wakeTime}
                       </Typography>
-
+                      <Typography sx={{ color: INK_FAINT }}>·</Typography>
                       <Typography
                         sx={{
-                          color: "text.secondary",
+                          fontFamily: FONT_DISPLAY,
+                          fontWeight: 600,
+                          fontSize: 15,
+                          color: accent,
                         }}
                       >
-                        ·
-                      </Typography>
-
-                      <Typography
-                        sx={{
-                          fontWeight: 700,
-                          color: "text.primary",
-                        }}
-                      >
-                        {formatDuration(sleepDuration)}
+                        {babyName +
+                          " was sleeping " +
+                          formatDuration(sleepDuration)}
                       </Typography>
                     </>
                   )}
@@ -281,14 +268,9 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                     variant="caption"
                     noWrap
                     sx={{
-                      ml: 1,
-                      mb: 1,
                       display: "block",
-                      color: "text.secondary",
-                      maxWidth: {
-                        xs: 180,
-                        sm: 420,
-                      },
+                      color: INK_SOFT,
+                      maxWidth: { xs: 180, sm: 420 },
                     }}
                   >
                     {draft.notes}
@@ -300,17 +282,18 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
             <Stack
               direction="row"
               spacing={0.5}
-              sx={{
-                alignItems: "center",
-                flexShrink: 0,
-              }}
+              sx={{ alignItems: "center", flexShrink: 0 }}
             >
               {hasChanges && (
                 <Chip
                   label="Unsaved"
                   size="small"
-                  color="warning"
-                  variant="outlined"
+                  sx={{
+                    bgcolor: SUN_TINT,
+                    color: SUN,
+                    fontWeight: 700,
+                    border: "none",
+                  }}
                 />
               )}
 
@@ -318,11 +301,12 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                 <IconButton
                   size="small"
                   onClick={() => setIsExpanded((current) => !current)}
+                  sx={{ color: INK_SOFT }}
                 >
                   {isExpanded ? (
-                    <ExpandLessOutlinedIcon fontSize="small" />
+                    <ExpandLessRoundedIcon fontSize="small" />
                   ) : (
-                    <EditOutlinedIcon fontSize="small" />
+                    <EditRoundedIcon fontSize="small" />
                   )}
                 </IconButton>
               </Tooltip>
@@ -330,14 +314,14 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
               <Tooltip title="Delete">
                 <IconButton
                   size="small"
-                  color="error"
                   disabled={isDeleting}
                   onClick={() => void handleDelete()}
+                  sx={{ color: ROSE }}
                 >
                   {isDeleting ? (
-                    <CircularProgress size={18} />
+                    <CircularProgress size={18} sx={{ color: ROSE }} />
                   ) : (
-                    <DeleteOutlineOutlinedIcon fontSize="small" />
+                    <DeleteOutlineRoundedIcon fontSize="small" />
                   )}
                 </IconButton>
               </Tooltip>
@@ -345,7 +329,7 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
           </Stack>
 
           <Collapse in={isExpanded} unmountOnExit>
-            <Stack spacing={1.5}>
+            <Stack spacing={2}>
               <Box
                 sx={{
                   display: "grid",
@@ -354,7 +338,10 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                     sm: "repeat(2, minmax(0, 1fr))",
                     xl: "repeat(4, minmax(0, 1fr))",
                   },
-                  gap: 1.25,
+                  gap: 1.5,
+                  p: 1.5,
+                  borderRadius: 3,
+                  bgcolor: "rgba(238, 227, 216, 0.25)",
                 }}
               >
                 <SleepTimeInput
@@ -387,17 +374,17 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
               </Box>
 
               <Typography
-                variant="caption"
                 component="button"
                 type="button"
                 onClick={() => setShowNotes((current) => !current)}
                 sx={{
                   alignSelf: "flex-start",
                   border: 0,
-                  pl: 1,
+                  p: 0,
                   bgcolor: "transparent",
-                  color: "primary.main",
-                  font: "inherit",
+                  color: MOON,
+                  fontSize: 13,
+                  fontWeight: 700,
                   cursor: "pointer",
                 }}
               >
@@ -414,37 +401,28 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                   maxRows={4}
                   size="small"
                   fullWidth
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }}
                 />
               </Collapse>
 
               <Stack
-                direction={{
-                  xs: "column",
-                  sm: "row",
-                }}
-                spacing={1}
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1.5}
                 sx={{
-                  alignItems: {
-                    xs: "stretch",
-                    sm: "center",
-                  },
+                  alignItems: { xs: "stretch", sm: "center" },
                   justifyContent: "space-between",
                 }}
               >
                 <Box>
                   {sleepDuration !== null && (
-                    <Typography
-                      sx={{
-                        pl: 1,
-                        color: "text.secondary",
-                      }}
-                    >
+                    <Typography sx={{ color: INK_SOFT, fontSize: 14 }}>
                       Slept{" "}
                       <Box
                         component="span"
                         sx={{
-                          fontWeight: 700,
-                          color: "text.primary",
+                          fontFamily: FONT_DISPLAY,
+                          fontWeight: 600,
+                          color: INK,
                         }}
                       >
                         {formatDuration(sleepDuration)}
@@ -455,14 +433,21 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                 </Box>
 
                 <Button
-                  size="small"
+                  disableElevation
+                  variant="contained"
                   disabled={!hasChanges || isSaving || isDeleting}
                   onClick={() => void handleSave()}
                   startIcon={
                     isSaving ? (
-                      <CircularProgress size={16} color="inherit" />
+                      <CircularProgress size={16} sx={{ color: "#fff" }} />
                     ) : undefined
                   }
+                  sx={{
+                    borderRadius: 999,
+                    bgcolor: accent,
+                    "&:hover": { bgcolor: accentHover },
+                    alignSelf: { xs: "stretch", sm: "auto" },
+                  }}
                 >
                   {isSaving ? "Saving…" : "Save"}
                 </Button>
