@@ -10,6 +10,7 @@ import {
 import BedtimeRoundedIcon from "@mui/icons-material/BedtimeRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
+import WbTwilightRoundedIcon from "@mui/icons-material/WbTwilightRounded";
 
 import { useEffect, useState } from "react";
 
@@ -20,6 +21,7 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   createSleepLog,
   fetchSleepLogs,
+  type SleepLog,
   type SleepType,
 } from "../store/slices/sleepSlice";
 
@@ -38,7 +40,22 @@ const MOON = "#6C63AC";
 const MOON_TINT = "rgba(108, 99, 172, 0.10)";
 const SUN = "#E1963C";
 const SUN_TINT = "rgba(225, 150, 60, 0.12)";
+const DAWN = "#E0876B";
+const DAWN_TINT = "rgba(224, 135, 107, 0.14)";
 const FONT_DISPLAY = "'Fraunces', Georgia, serif";
+
+// The list should read as a timeline, not a creation-order list — so we sort
+// by each log's actual start time rather than sleepNumber. Wake logs start
+// at wakeTime; nap/night logs start at onBedTime. Logs missing a time yet
+// (just created, not filled in) sort to the end instead of jumping around.
+function getLogSortKey(log: SleepLog): string {
+  const key =
+    log.type === "wake"
+      ? log.wakeTime
+      : log.onBedTime || log.asleepTime || log.wakeTime || log.pickupTime;
+
+  return key || "99:99";
+}
 
 export default function SleepPage() {
   const dispatch = useAppDispatch();
@@ -56,7 +73,10 @@ export default function SleepPage() {
   const activeBabyLogs = useAppSelector((state) =>
     state.sleep.logs
       .filter((log) => log.babyId === activeBabyId && log.date === selectedDate)
-      .sort((first, second) => first.sleepNumber - second.sleepNumber),
+      .slice()
+      .sort((first, second) =>
+        getLogSortKey(first).localeCompare(getLogSortKey(second)),
+      ),
   );
 
   useEffect(() => {
@@ -72,6 +92,7 @@ export default function SleepPage() {
     );
   }, [activeBabyId, selectedDate, dispatch]);
 
+  const hasWakeLog = activeBabyLogs.some((log) => log.type === "wake");
   const hasNightSleepLog = activeBabyLogs.some((log) => log.type === "night");
 
   const handleAddSleep = async (type: SleepType) => {
@@ -83,7 +104,14 @@ export default function SleepPage() {
       return;
     }
 
+    if (type === "wake" && hasWakeLog) {
+      return;
+    }
+
     const napCount = activeBabyLogs.filter((log) => log.type === "nap").length;
+
+    const sleepNumber =
+      type === "wake" ? 0 : type === "night" ? 1 : napCount + 1;
 
     try {
       await dispatch(
@@ -91,7 +119,7 @@ export default function SleepPage() {
           babyId: activeBabyId,
           date: selectedDate,
           type,
-          sleepNumber: type === "night" ? 1 : napCount + 1,
+          sleepNumber,
         }),
       ).unwrap();
     } catch (error) {
@@ -136,7 +164,7 @@ export default function SleepPage() {
         >
           <Stack
             spacing={2.5}
-            sx={{ alignItems: "center", textAlign: "center", maxWidth: 320 }}
+            sx={{ alignItems: "center", textAlign: "center", maxWidth: 340 }}
           >
             <Box
               sx={{
@@ -145,7 +173,7 @@ export default function SleepPage() {
                 borderRadius: "50%",
                 display: "grid",
                 placeItems: "center",
-                background: `linear-gradient(135deg, ${MOON_TINT}, ${SUN_TINT})`,
+                background: `linear-gradient(135deg, ${DAWN_TINT}, ${SUN_TINT})`,
               }}
             >
               <BedtimeRoundedIcon sx={{ fontSize: 36, color: MOON }} />
@@ -160,49 +188,60 @@ export default function SleepPage() {
                   color: INK,
                 }}
               >
-                No sleep logged yet
+                Start the day
               </Typography>
 
               <Typography sx={{ color: INK_SOFT, mt: 0.75 }}>
-                Add {activeBaby.name}&apos;s first nap or night sleep to start
-                today&apos;s timeline.
+                Log what time {activeBaby.name} woke up this morning — that's
+                the start of today's timeline.
               </Typography>
             </Box>
 
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={1.5}
-              sx={{ width: "100%" }}
-            >
+            <Stack spacing={1.25} sx={{ width: "100%" }}>
               <Button
                 variant="contained"
                 size="large"
                 disableElevation
-                startIcon={<LightModeRoundedIcon />}
-                onClick={() => void handleAddSleep("nap")}
+                startIcon={<WbTwilightRoundedIcon />}
+                onClick={() => void handleAddSleep("wake")}
                 sx={{
-                  borderRadius: 1,
-                  bgcolor: SUN,
-                  "&:hover": { bgcolor: "#CC8530" },
+                  borderRadius: 999,
+                  bgcolor: DAWN,
+                  "&:hover": { bgcolor: "#C96F55" },
                 }}
               >
-                Log Nap
+                Log wake-up time
               </Button>
 
-              <Button
-                variant="outlined"
-                size="large"
-                startIcon={<DarkModeRoundedIcon />}
-                onClick={() => void handleAddSleep("night")}
-                sx={{
-                  borderRadius: 9,
-                  borderColor: MOON,
-                  color: MOON,
-                  "&:hover": { borderColor: MOON, bgcolor: MOON_TINT },
-                }}
-              >
-                Log night sleep
-              </Button>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25}>
+                <Button
+                  variant="outlined"
+                  startIcon={<LightModeRoundedIcon />}
+                  onClick={() => void handleAddSleep("nap")}
+                  sx={{
+                    borderRadius: 999,
+                    borderColor: SUN,
+                    color: SUN,
+                    "&:hover": { borderColor: SUN, bgcolor: SUN_TINT },
+                  }}
+                >
+                  Add a nap instead
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  startIcon={<DarkModeRoundedIcon />}
+                  onClick={() => void handleAddSleep("night")}
+                  sx={{
+                    borderRadius: 999,
+                    borderColor: MOON,
+                    color: MOON,
+                    "&:hover": { borderColor: MOON, bgcolor: MOON_TINT },
+                  }}
+                >
+                  Log night sleep
+                </Button>
+              </Stack>
             </Stack>
           </Stack>
         </Box>
@@ -229,22 +268,39 @@ export default function SleepPage() {
           <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={1.5}
-            sx={{ alignSelf: "flex-start", pt: 1.5 }}
+            sx={{ alignSelf: "flex-start", pt: 1.5, flexWrap: "wrap" }}
           >
-            <Button
-              variant="outlined"
-              startIcon={<LightModeRoundedIcon />}
-              onClick={() => void handleAddSleep("nap")}
-              sx={{
-                borderRadius: 999,
-                borderColor: SUN,
-                color: SUN,
-                "&:hover": { borderColor: SUN, bgcolor: SUN_TINT },
-              }}
-            >
-              Add another nap
-            </Button>
+            {!hasWakeLog && (
+              <Button
+                variant="outlined"
+                startIcon={<WbTwilightRoundedIcon />}
+                onClick={() => void handleAddSleep("wake")}
+                sx={{
+                  borderRadius: 999,
+                  borderColor: DAWN,
+                  color: DAWN,
+                  "&:hover": { borderColor: DAWN, bgcolor: DAWN_TINT },
+                }}
+              >
+                Add wake-up time
+              </Button>
+            )}
 
+            {!hasNightSleepLog && (
+              <Button
+                variant="outlined"
+                startIcon={<LightModeRoundedIcon />}
+                onClick={() => void handleAddSleep("nap")}
+                sx={{
+                  borderRadius: 999,
+                  borderColor: SUN,
+                  color: SUN,
+                  "&:hover": { borderColor: SUN, bgcolor: SUN_TINT },
+                }}
+              >
+                Add another nap
+              </Button>
+            )}
             {!hasNightSleepLog && (
               <Button
                 variant="outlined"

@@ -15,7 +15,7 @@ import {
   type UpdateSleepLogRequest,
 } from "../../api/sleepApi";
 
-export type SleepType = "nap" | "night";
+export type SleepType = "nap" | "night" | "wake";
 
 export type SleepLog = {
   id: string;
