@@ -53,7 +53,7 @@ export default function DaySummary({
   return (
     <Box
       sx={{
-        borderRadius: 4,
+        borderRadius: 1,
         p: 2.5,
         background: `linear-gradient(135deg, ${nursery.moonTint}, ${nursery.sunTint})`,
       }}
