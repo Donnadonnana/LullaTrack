@@ -270,26 +270,40 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
                     {sleepTitle}
                   </Typography>
 
-                  {!isExpanded && !isNight && durationValue !== null && (
-                    <>
-                      <Typography sx={{ color: INK_FAINT }}>·</Typography>
-                      <Typography sx={{ color: INK_SOFT, fontSize: 14 }}>
-                        {rangeStart}–{rangeEnd}
-                      </Typography>
-                      <Typography sx={{ color: INK_FAINT }}>·</Typography>
-                      <Typography
-                        sx={{
-                          fontFamily: FONT_DISPLAY,
-                          fontWeight: 600,
-                          fontSize: 15,
-                          color: accent,
-                        }}
-                      >
-                        {formatDuration(durationValue)}
-                      </Typography>
-                    </>
+                  {!isExpanded &&
+                    !isNight &&
+                    durationValue !== null &&
+                    !isWake && (
+                      <>
+                        <Typography sx={{ color: INK_FAINT }}>·</Typography>
+                        <Typography sx={{ color: INK_SOFT, fontSize: 14 }}>
+                          {rangeStart}–{rangeEnd}
+                        </Typography>
+                        <Typography sx={{ color: INK_FAINT }}>·</Typography>
+                        <Typography
+                          sx={{
+                            fontFamily: FONT_DISPLAY,
+                            fontWeight: 600,
+                            fontSize: 15,
+                            color: accent,
+                          }}
+                        >
+                          {formatDuration(durationValue)}
+                        </Typography>
+                      </>
+                    )}
+                  {isWake && (
+                    <Typography
+                      sx={{
+                        fontFamily: FONT_DISPLAY,
+                        fontWeight: 600,
+                        fontSize: 15,
+                        color: accent,
+                      }}
+                    >
+                      {rangeEnd}
+                    </Typography>
                   )}
-
                   {!isExpanded &&
                     isNight &&
                     draft.onBedTime &&
