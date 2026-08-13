@@ -9,19 +9,33 @@ import {
   IconButton,
   Stack,
   TextField,
+  Tooltip,
   Typography,
+  useTheme,
 } from "@mui/material";
 
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
+import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
+import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
+import WbTwilightRoundedIcon from "@mui/icons-material/WbTwilightRounded";
+
 import { useEffect, useMemo, useState } from "react";
+
 import {
   deleteSleepLog,
   saveSleepLog,
   type SleepLog,
 } from "../../store/slices/sleepSlice";
+
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+
 import SleepTimeInput from "../SleepTimeInput/SleepTimeInput";
+
 import { calculateDuration, formatDuration } from "../../utils/time";
+
+const FONT_DISPLAY = "'Fraunces', Georgia, serif";
 
 type SleepCardProps = {
   log: SleepLog;
@@ -33,8 +47,23 @@ type SleepDraft = Pick<
   "onBedTime" | "asleepTime" | "wakeTime" | "pickupTime" | "notes"
 >;
 
-export default function SleepCard({ log, babyName }: SleepCardProps) {
+function isLogComplete(type: SleepLog["type"], sleep: SleepDraft): boolean {
+  if (type === "wake") {
+    return Boolean(sleep.wakeTime && sleep.pickupTime);
+  }
+
+  if (type === "night") {
+    return Boolean(sleep.onBedTime && sleep.asleepTime);
+  }
+
+  return Boolean(
+    sleep.onBedTime && sleep.asleepTime && sleep.wakeTime && sleep.pickupTime,
+  );
+}
+
+export default function SleepCard({ log }: SleepCardProps) {
   const dispatch = useAppDispatch();
+  const { nursery } = useTheme().palette;
 
   const isSaving = useAppSelector((state) =>
     state.sleep.savingIds.includes(log.id),
@@ -52,16 +81,32 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
     notes: log.notes ?? "",
   });
 
-  const [showNotes, setShowNotes] = useState(Boolean(log.notes));
-
-  useEffect(() => {
-    setDraft({
+  const [isExpanded, setIsExpanded] = useState(
+    !isLogComplete(log.type, {
       onBedTime: log.onBedTime,
       asleepTime: log.asleepTime,
       wakeTime: log.wakeTime,
       pickupTime: log.pickupTime,
       notes: log.notes ?? "",
-    });
+    }),
+  );
+
+  const [showNotes, setShowNotes] = useState(Boolean(log.notes));
+
+  useEffect(() => {
+    const nextDraft: SleepDraft = {
+      onBedTime: log.onBedTime,
+      asleepTime: log.asleepTime,
+      wakeTime: log.wakeTime,
+      pickupTime: log.pickupTime,
+      notes: log.notes ?? "",
+    };
+
+    setDraft(nextDraft);
+
+    if (!isLogComplete(log.type, nextDraft)) {
+      setIsExpanded(true);
+    }
   }, [log]);
 
   const hasChanges = useMemo(() => {
@@ -74,11 +119,33 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
     );
   }, [draft, log]);
 
-  const sleepDuration = calculateDuration(draft.asleepTime, draft.wakeTime);
-
   const isNap = log.type === "nap";
+  const isWake = log.type === "wake";
+  const isNight = log.type === "night";
 
-  const sleepTitle = isNap ? `Nap ${log.sleepNumber}` : "Night Sleep";
+  const sleepTitle = isWake
+    ? "Woke up"
+    : isNap
+      ? `Nap ${log.sleepNumber}`
+      : "Night sleep";
+
+  const accent = isWake ? nursery.dawn : isNap ? nursery.sun : nursery.moon;
+  const accentTint = isWake
+    ? nursery.dawnTint
+    : isNap
+      ? nursery.sunTint
+      : nursery.moonTint;
+  const accentHover = isWake ? "#C96F55" : isNap ? "#CC8530" : "#5A5296";
+
+  // Night sleep has no same-day wake time, so there's no duration to show —
+  // just the on-bed / asleep times. Wake and nap logs both have a
+  // start → end pair we can turn into a duration.
+  const durationLabel = isWake ? "Awake before pickup" : "Slept";
+  const rangeStart = isWake ? draft.wakeTime : draft.asleepTime;
+  const rangeEnd = isWake ? draft.pickupTime : draft.wakeTime;
+  const durationValue = isNight
+    ? null
+    : calculateDuration(rangeStart, rangeEnd);
 
   const updateField = (field: keyof SleepDraft, value: string) => {
     setDraft((current) => ({
@@ -93,12 +160,24 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
     }
 
     try {
-      await dispatch(
+      const savedLog = await dispatch(
         saveSleepLog({
           id: log.id,
           changes: draft,
         }),
       ).unwrap();
+
+      const savedDraft: SleepDraft = {
+        onBedTime: savedLog.onBedTime,
+        asleepTime: savedLog.asleepTime,
+        wakeTime: savedLog.wakeTime,
+        pickupTime: savedLog.pickupTime,
+        notes: savedLog.notes ?? "",
+      };
+
+      if (isLogComplete(savedLog.type, savedDraft)) {
+        setIsExpanded(false);
+      }
     } catch (error) {
       console.error("Unable to save sleep log:", error);
     }
@@ -117,197 +196,377 @@ export default function SleepCard({ log, babyName }: SleepCardProps) {
       variant="outlined"
       sx={{
         overflow: "visible",
+        borderRadius: 4,
+        boxShadow: isExpanded ? "0 8px 24px rgba(58, 52, 80, 0.06)" : "none",
+        transition: "box-shadow 0.2s ease",
       }}
     >
-      <CardContent>
-        <Stack spacing={1.25}>
+      <CardContent
+        sx={{
+          p: isExpanded ? 2.5 : 1.5,
+          "&:last-child": {
+            pb: isExpanded ? 2.5 : 1.5,
+          },
+        }}
+      >
+        <Stack spacing={isExpanded ? 2 : 0}>
           <Stack
             direction="row"
+            spacing={1.5}
             sx={{
               alignItems: "center",
               justifyContent: "space-between",
+              minHeight: 40,
             }}
           >
             <Stack
               direction="row"
-              spacing={1.25}
-              sx={{
-                alignItems: "center",
-              }}
+              spacing={1.5}
+              sx={{ alignItems: "center", minWidth: 0 }}
             >
-              <Box>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 700,
-                  }}
+              <Box
+                sx={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  display: "grid",
+                  placeItems: "center",
+                  flexShrink: 0,
+                  bgcolor: accentTint,
+                }}
+              >
+                {isWake ? (
+                  <WbTwilightRoundedIcon sx={{ fontSize: 20, color: accent }} />
+                ) : isNap ? (
+                  <LightModeRoundedIcon sx={{ fontSize: 20, color: accent }} />
+                ) : (
+                  <DarkModeRoundedIcon sx={{ fontSize: 20, color: accent }} />
+                )}
+              </Box>
+
+              <Box sx={{ minWidth: 0 }}>
+                <Stack
+                  direction="row"
+                  spacing={0.75}
+                  sx={{ alignItems: "baseline", flexWrap: "wrap" }}
                 >
-                  {sleepTitle}
-                </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: FONT_DISPLAY,
+                      fontWeight: 600,
+                      fontSize: 17,
+                      color: "text.primary",
+                    }}
+                  >
+                    {sleepTitle}
+                  </Typography>
+
+                  {!isExpanded &&
+                    !isNight &&
+                    durationValue !== null &&
+                    !isWake && (
+                      <>
+                        <Typography sx={{ color: "text.disabled" }}>
+                          ·
+                        </Typography>
+                        <Typography
+                          sx={{ color: "text.secondary", fontSize: 14 }}
+                        >
+                          {rangeStart}–{rangeEnd}
+                        </Typography>
+                        <Typography sx={{ color: "text.disabled" }}>
+                          ·
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontFamily: FONT_DISPLAY,
+                            fontWeight: 600,
+                            fontSize: 15,
+                            color: accent,
+                          }}
+                        >
+                          {formatDuration(durationValue)}
+                        </Typography>
+                      </>
+                    )}
+                  {isWake && (
+                    <Typography
+                      sx={{
+                        fontFamily: FONT_DISPLAY,
+                        fontWeight: 600,
+                        fontSize: 15,
+                        color: accent,
+                      }}
+                    >
+                      {rangeEnd}
+                    </Typography>
+                  )}
+                  {!isExpanded &&
+                    isNight &&
+                    draft.onBedTime &&
+                    draft.asleepTime && (
+                      <>
+                        <Typography sx={{ color: "text.disabled" }}>
+                          ·
+                        </Typography>
+                        <Typography
+                          sx={{ color: "text.secondary", fontSize: 14 }}
+                        >
+                          Down {draft.onBedTime} · Asleep {draft.asleepTime}
+                        </Typography>
+                      </>
+                    )}
+                </Stack>
+
+                {!isExpanded && draft.notes && (
+                  <Typography
+                    variant="caption"
+                    noWrap
+                    sx={{
+                      display: "block",
+                      color: "text.secondary",
+                      maxWidth: { xs: 180, sm: 420 },
+                    }}
+                  >
+                    {draft.notes}
+                  </Typography>
+                )}
               </Box>
             </Stack>
 
             <Stack
               direction="row"
-              spacing={1}
-              sx={{
-                alignItems: "center",
-              }}
+              spacing={0.5}
+              sx={{ alignItems: "center", flexShrink: 0 }}
             >
-              {sleepDuration !== null && (
+              {hasChanges && (
                 <Chip
-                  label={`${formatDuration(sleepDuration)} asleep`}
-                  color="primary"
-                  variant="outlined"
+                  label="Unsaved"
+                  size="small"
+                  sx={{
+                    bgcolor: nursery.sunTint,
+                    color: nursery.sun,
+                    fontWeight: 700,
+                    border: "none",
+                  }}
                 />
               )}
 
-              <IconButton
-                aria-label={`Delete ${sleepTitle}`}
-                disabled={isDeleting}
-                onClick={() => void handleDelete()}
+              <Tooltip title={isExpanded ? "Collapse" : "Edit"}>
+                <IconButton
+                  size="small"
+                  onClick={() => setIsExpanded((current) => !current)}
+                  sx={{ color: "text.secondary" }}
+                >
+                  {isExpanded ? (
+                    <ExpandLessRoundedIcon fontSize="small" />
+                  ) : (
+                    <EditRoundedIcon fontSize="small" />
+                  )}
+                </IconButton>
+              </Tooltip>
+
+              <Tooltip title="Delete">
+                <IconButton
+                  size="small"
+                  disabled={isDeleting}
+                  onClick={() => void handleDelete()}
+                  sx={{ color: nursery.rose }}
+                >
+                  {isDeleting ? (
+                    <CircularProgress size={18} sx={{ color: nursery.rose }} />
+                  ) : (
+                    <DeleteOutlineRoundedIcon fontSize="small" />
+                  )}
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          </Stack>
+
+          <Collapse in={isExpanded} unmountOnExit>
+            <Stack spacing={2}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: isNap
+                    ? {
+                        xs: "1fr",
+                        sm: "repeat(2, minmax(0, 1fr))",
+                        xl: "repeat(4, minmax(0, 1fr))",
+                      }
+                    : { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" },
+                  gap: 1.5,
+                  p: 1.5,
+                  borderRadius: 3,
+                  bgcolor: "rgba(238, 227, 216, 0.25)",
+                }}
               >
-                {isDeleting ? (
-                  <CircularProgress size={20} />
-                ) : (
-                  <DeleteOutlineOutlinedIcon />
+                {isWake && (
+                  <>
+                    <SleepTimeInput
+                      label="Woke up"
+                      value={draft.wakeTime}
+                      onChange={(value) => updateField("wakeTime", value)}
+                      inline
+                    />
+
+                    <SleepTimeInput
+                      label="Picked up"
+                      value={draft.pickupTime}
+                      onChange={(value) => updateField("pickupTime", value)}
+                      inline
+                    />
+                  </>
                 )}
-              </IconButton>
-            </Stack>
-          </Stack>
 
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(2, minmax(0, 1fr))",
-                xl: "repeat(4, minmax(0, 1fr))",
-              },
-              columnGap: 2,
-              rowGap: 1,
-              alignItems: "center",
-            }}
-          >
-            <SleepTimeInput
-              label={`${babyName} on bed`}
-              value={draft.onBedTime}
-              onChange={(value) => updateField("onBedTime", value)}
-            />
+                {isNight && (
+                  <>
+                    <SleepTimeInput
+                      label="On bed"
+                      value={draft.onBedTime}
+                      onChange={(value) => updateField("onBedTime", value)}
+                      inline
+                    />
 
-            <SleepTimeInput
-              label={`${babyName} fell asleep`}
-              value={draft.asleepTime}
-              onChange={(value) => updateField("asleepTime", value)}
-            />
+                    <SleepTimeInput
+                      label="Asleep"
+                      value={draft.asleepTime}
+                      onChange={(value) => updateField("asleepTime", value)}
+                      inline
+                    />
+                  </>
+                )}
 
-            <SleepTimeInput
-              label={`${babyName} woke up`}
-              value={draft.wakeTime}
-              onChange={(value) => updateField("wakeTime", value)}
-            />
+                {isNap && (
+                  <>
+                    <SleepTimeInput
+                      label="On bed"
+                      value={draft.onBedTime}
+                      onChange={(value) => updateField("onBedTime", value)}
+                      inline
+                    />
 
-            <SleepTimeInput
-              label={`${babyName} picked up`}
-              value={draft.pickupTime}
-              onChange={(value) => updateField("pickupTime", value)}
-            />
-          </Box>
+                    <SleepTimeInput
+                      label="Asleep"
+                      value={draft.asleepTime}
+                      onChange={(value) => updateField("asleepTime", value)}
+                      inline
+                    />
 
-          <Typography
-            component="button"
-            type="button"
-            onClick={() => setShowNotes((current) => !current)}
-            sx={{
-              alignSelf: "flex-start",
-              border: 0,
-              p: 0,
-              bgcolor: "transparent",
-              color: "primary.main",
-              font: "inherit",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            {showNotes ? "Hide notes" : "+ Add notes"}
-          </Typography>
+                    <SleepTimeInput
+                      label="Woke"
+                      value={draft.wakeTime}
+                      onChange={(value) => updateField("wakeTime", value)}
+                      inline
+                    />
 
-          <Collapse in={showNotes}>
-            <TextField
-              label="Wake-ups, feeding, or other notes"
-              placeholder={`${babyName} woke at 12:15 and fed for 10 minutes…`}
-              value={draft.notes}
-              onChange={(event) => updateField("notes", event.target.value)}
-              multiline
-              minRows={3}
-              fullWidth
-            />
-          </Collapse>
+                    <SleepTimeInput
+                      label="Picked up"
+                      value={draft.pickupTime}
+                      onChange={(value) => updateField("pickupTime", value)}
+                      inline
+                    />
+                  </>
+                )}
+              </Box>
 
-          {sleepDuration !== null && (
-            <Stack
-              direction="row"
-              spacing={0.75}
-              sx={{
-                alignItems: "center",
-                flexWrap: "wrap",
-                color: "text.secondary",
-              }}
-            >
               <Typography
-                variant="caption"
+                component="button"
+                type="button"
+                onClick={() => setShowNotes((current) => !current)}
                 sx={{
+                  alignSelf: "flex-start",
+                  border: 0,
+                  p: 0,
+                  bgcolor: "transparent",
+                  color: nursery.moon,
+                  fontSize: 13,
                   fontWeight: 700,
-                  color: "text.primary",
+                  cursor: "pointer",
                 }}
               >
-                Slept {formatDuration(sleepDuration)}
+                {showNotes ? "Hide notes" : "+ Add notes"}
               </Typography>
 
-              {draft.asleepTime && draft.wakeTime && (
-                <>
-                  <Typography variant="caption" aria-hidden="true">
-                    ·
-                  </Typography>
+              <Collapse in={showNotes}>
+                <TextField
+                  label="Wake-ups, feeding, or notes"
+                  value={draft.notes}
+                  onChange={(event) => updateField("notes", event.target.value)}
+                  multiline
+                  minRows={2}
+                  maxRows={4}
+                  size="small"
+                  fullWidth
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }}
+                />
+              </Collapse>
 
-                  <Typography variant="caption">
-                    {draft.asleepTime}–{draft.wakeTime}
-                  </Typography>
-                </>
-              )}
-            </Stack>
-          )}
-
-          <Stack
-            direction="row"
-            sx={{
-              justifyContent: "flex-end",
-              alignItems: "center",
-            }}
-          >
-            {hasChanges && (
-              <Typography
-                variant="body2"
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1.5}
                 sx={{
-                  color: "text.secondary",
+                  alignItems: { xs: "stretch", sm: "center" },
+                  justifyContent: "space-between",
                 }}
               >
-                Unsaved changes
-              </Typography>
-            )}
+                <Box>
+                  {!isNight && durationValue !== null && (
+                    <Typography sx={{ color: "text.secondary", fontSize: 14 }}>
+                      {durationLabel}{" "}
+                      <Box
+                        component="span"
+                        sx={{
+                          fontFamily: FONT_DISPLAY,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {formatDuration(durationValue)}
+                      </Box>{" "}
+                      · {rangeStart}–{rangeEnd}
+                    </Typography>
+                  )}
 
-            <Button
-              disabled={!hasChanges || isSaving || isDeleting}
-              onClick={() => void handleSave()}
-              startIcon={
-                isSaving ? (
-                  <CircularProgress size={18} color="inherit" />
-                ) : undefined
-              }
-            >
-              {isSaving ? "Saving…" : "Save"}
-            </Button>
-          </Stack>
+                  {isNight && draft.onBedTime && draft.asleepTime && (
+                    <Typography sx={{ color: "text.secondary", fontSize: 14 }}>
+                      Down at{" "}
+                      <Box
+                        component="span"
+                        sx={{
+                          fontFamily: FONT_DISPLAY,
+                          fontWeight: 600,
+                          color: "text.primary",
+                        }}
+                      >
+                        {draft.onBedTime}
+                      </Box>{" "}
+                      · Asleep by {draft.asleepTime}
+                    </Typography>
+                  )}
+                </Box>
+
+                <Button
+                  disableElevation
+                  variant="contained"
+                  disabled={!hasChanges || isSaving || isDeleting}
+                  onClick={() => void handleSave()}
+                  startIcon={
+                    isSaving ? (
+                      <CircularProgress size={16} sx={{ color: "#fff" }} />
+                    ) : undefined
+                  }
+                  sx={{
+                    borderRadius: 999,
+                    bgcolor: accent,
+                    "&:hover": { bgcolor: accentHover },
+                    alignSelf: { xs: "stretch", sm: "auto" },
+                  }}
+                >
+                  {isSaving ? "Saving…" : "Save"}
+                </Button>
+              </Stack>
+            </Stack>
+          </Collapse>
         </Stack>
       </CardContent>
     </Card>
