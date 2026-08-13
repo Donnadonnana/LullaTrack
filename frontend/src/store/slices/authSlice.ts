@@ -144,7 +144,7 @@ export const restoreSession = createAsyncThunk<
 >("auth/restoreSession", async (_, thunkApi) => {
   const { idToken, refreshToken, expiresAt } = thunkApi.getState().auth;
 
-  if (!idToken) {
+  if (!idToken || !refreshToken) {
     throw new Error("No saved token.");
   }
 

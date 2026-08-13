@@ -61,7 +61,7 @@ function isLogComplete(type: SleepLog["type"], sleep: SleepDraft): boolean {
   );
 }
 
-export default function SleepCard({ log, babyName }: SleepCardProps) {
+export default function SleepCard({ log }: SleepCardProps) {
   const dispatch = useAppDispatch();
   const { nursery } = useTheme().palette;
 
