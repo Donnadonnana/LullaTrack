@@ -16,6 +16,10 @@ import type { Baby } from "./babySlice";
 export type AuthStatus = "idle" | "loading" | "authenticated" | "error";
 const STORAGE_KEY = "lullatrack-auth";
 
+// Firebase idTokens live ~1hr. Refresh this many ms before actual expiry
+// so we never fire a request with a token that's about to die mid-flight.
+const REFRESH_BUFFER_MS = 60_000;
+
 export type RegistrationDraft = {
   email: string;
   password: string;
@@ -127,20 +131,61 @@ export const restoreSession = createAsyncThunk<
   {
     user: User;
     babies: Baby[];
+    refreshed?: {
+      idToken: string;
+      refreshToken: string;
+      expiresAt: number;
+    };
   },
   void,
   {
     state: RootState;
   }
 >("auth/restoreSession", async (_, thunkApi) => {
-  const idToken = thunkApi.getState().auth.idToken;
+  const { idToken, refreshToken, expiresAt } = thunkApi.getState().auth;
+
   if (!idToken) {
     throw new Error("No saved token.");
   }
-  return getCurrentUser(idToken);
+
+  const isExpiredOrExpiringSoon =
+    !expiresAt || Date.now() >= expiresAt - REFRESH_BUFFER_MS;
+
+  // The common case on a fresh page load: the stored idToken is already
+  // past its ~1hr lifetime. Refresh first instead of calling
+  // getCurrentUser with a token we know will 401 and log the user out.
+  if (isExpiredOrExpiringSoon) {
+    const refreshedTokens = await refreshAuthToken(refreshToken);
+
+    const refreshed = {
+      idToken: refreshedTokens.idToken,
+      refreshToken: refreshedTokens.refreshToken,
+      expiresAt: Date.now() + refreshedTokens.expiresIn * 1000,
+    };
+
+    saveSession(refreshed);
+
+    const profile = await getCurrentUser(refreshed.idToken);
+    return {
+      user: profile.user,
+      babies: profile.babies,
+      refreshed,
+    };
+  }
+
+  const profile = await getCurrentUser(idToken);
+
+  return {
+    user: profile.user,
+    babies: profile.babies,
+  };
 });
 
-function saveSession(session: AuthSession) {
+function saveSession(session: {
+  idToken: string;
+  refreshToken: string;
+  expiresAt: number;
+}) {
   localStorage.setItem(
     STORAGE_KEY,
 
@@ -255,6 +300,11 @@ const authSlice = createSlice({
         state.status = "authenticated";
         state.error = null;
         state.initialized = true;
+        if (action.payload.refreshed) {
+          state.idToken = action.payload.refreshed.idToken;
+          state.refreshToken = action.payload.refreshed.refreshToken;
+          state.expiresAt = action.payload.refreshed.expiresAt;
+        }
       })
 
       .addCase(restoreSession.rejected, (state, action) => {
