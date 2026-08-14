@@ -10,6 +10,7 @@ import { BabyRoutes } from "./routes/baby/baby.routes";
 import { SleepRoutes } from "./routes/sleep/sleep.routes";
 import { AuthRoutes } from "./routes/auth/auth.routes";
 import { UserRoutes } from "./routes/user/user.routes";
+import { FeedingRoutes } from "./routes/feeding/feeding.routes";
 
 setGlobalOptions({
   region: "northamerica-northeast1",
@@ -22,6 +23,7 @@ const app = new App({
     DIContainer.get(SleepRoutes),
     DIContainer.get(AuthRoutes),
     DIContainer.get(UserRoutes),
+    DIContainer.get(FeedingRoutes),
   ],
 });
 

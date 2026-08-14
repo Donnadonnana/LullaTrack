@@ -1,19 +1,17 @@
+import { useState } from "react";
+
 import {
   Box,
-  Card,
-  CardContent,
-  FormControl,
-  IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
+  Collapse,
   Stack,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
+  useTheme,
 } from "@mui/material";
 
-import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
-import ChildCareOutlinedIcon from "@mui/icons-material/ChildCareOutlined";
+import ChildCareRoundedIcon from "@mui/icons-material/ChildCareRounded";
 
 import type {
   BreastSide,
@@ -24,6 +22,8 @@ import { calculateFeedingDuration } from "../../utils/time";
 import { formatMinutes } from "../../utils/reports";
 
 import TimeInput from "../SleepTimeInput/SleepTimeInput";
+import FeedingCardShell from "./FeedingCardShell";
+import { FONT_DISPLAY } from "../../theme/theme";
 
 type BreastfeedingCardProps = {
   log: BreastfeedingLog;
@@ -31,156 +31,157 @@ type BreastfeedingCardProps = {
   onDelete: () => void;
 };
 
+const sideOptions: { value: BreastSide; label: string }[] = [
+  { value: "left", label: "Left" },
+  { value: "right", label: "Right" },
+  { value: "both", label: "Both" },
+];
+
 export default function BreastfeedingCard({
   log,
   onUpdate,
   onDelete,
 }: BreastfeedingCardProps) {
+  const { nursery } = useTheme().palette;
+
+  const [showNotes, setShowNotes] = useState(Boolean(log.notes));
+
   const duration = calculateFeedingDuration(log.startTime, log.endTime);
+  const isComplete = Boolean(log.startTime && log.endTime);
+
+  const summary =
+    duration !== null ? (
+      <>
+        <Typography sx={{ color: "text.disabled" }}>·</Typography>
+        <Typography sx={{ color: "text.secondary", fontSize: 14 }}>
+          {log.startTime}–{log.endTime}
+        </Typography>
+        <Typography sx={{ color: "text.disabled" }}>·</Typography>
+        <Typography
+          sx={{
+            fontFamily: FONT_DISPLAY,
+            fontWeight: 600,
+            fontSize: 15,
+            color: nursery.sage,
+          }}
+        >
+          {formatMinutes(duration)}
+        </Typography>
+      </>
+    ) : (
+      <>
+        <Typography sx={{ color: "text.disabled" }}>·</Typography>
+        <Typography sx={{ color: "text.secondary", fontSize: 14 }}>
+          In progress
+        </Typography>
+      </>
+    );
 
   return (
-    <Card
-      sx={{
-        border: 1,
-        borderColor: "divider",
-        boxShadow: "none",
-      }}
+    <FeedingCardShell
+      title={`Breastfeeding ${log.feedingNumber}`}
+      icon={<ChildCareRoundedIcon sx={{ fontSize: 20 }} />}
+      accent={nursery.sage}
+      accentTint={nursery.sageTint}
+      summary={summary}
+      isComplete={isComplete}
+      onDelete={onDelete}
     >
-      <CardContent
-        sx={{
-          p: 3,
-          "&:last-child": {
-            pb: 3,
-          },
-        }}
-      >
-        <Stack spacing={3}>
-          <Stack
-            direction="row"
+      <Stack spacing={2}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" },
+            gap: 1.5,
+            p: 1.5,
+            borderRadius: 3,
+            bgcolor: nursery.panelTint,
+          }}
+        >
+          <TimeInput
+            label="Started"
+            value={log.startTime}
+            onChange={(value) => onUpdate({ startTime: value })}
+            inline
+          />
+
+          <TimeInput
+            label="Ended"
+            value={log.endTime}
+            onChange={(value) => onUpdate({ endTime: value })}
+            inline
+          />
+        </Box>
+
+        <Box>
+          <Typography sx={{ color: "text.secondary", fontSize: 13, mb: 0.75 }}>
+            Side
+          </Typography>
+
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={log.side || null}
+            onChange={(_, value) =>
+              onUpdate({ side: (value ?? "") as BreastSide })
+            }
             sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 2,
-            }}
-          >
-            <Stack
-              direction="row"
-              spacing={1.25}
-              sx={{
-                alignItems: "center",
-              }}
-            >
-              <Box
-                sx={{
-                  width: 42,
-                  height: 42,
-                  display: "grid",
-                  placeItems: "center",
-                  borderRadius: 2.5,
-                  bgcolor: "action.hover",
-                  color: "primary.main",
-                }}
-              >
-                <ChildCareOutlinedIcon />
-              </Box>
+              "& .MuiToggleButton-root": {
+                px: 2,
+                borderRadius: 999,
+                borderColor: "divider",
+                color: "text.secondary",
+                textTransform: "none",
 
-              <Box>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 700,
-                  }}
-                >
-                  Breastfeeding {log.feedingNumber}
-                </Typography>
+                "&.Mui-selected": {
+                  bgcolor: nursery.sageTint,
+                  color: nursery.sage,
+                  fontWeight: 700,
 
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: "text.secondary",
-                  }}
-                >
-                  {duration !== null ? formatMinutes(duration) : "In progress"}
-                </Typography>
-              </Box>
-            </Stack>
-
-            <IconButton
-              onClick={onDelete}
-              aria-label="Delete breastfeeding log"
-              color="error"
-            >
-              <DeleteOutlineOutlinedIcon />
-            </IconButton>
-          </Stack>
-
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(2, 1fr)",
+                  "&:hover": { bgcolor: nursery.sageTint },
+                },
               },
-              gap: 2,
             }}
           >
-            <TimeInput
-              label="Started"
-              value={log.startTime}
-              onChange={(value) =>
-                onUpdate({
-                  startTime: value,
-                })
-              }
-            />
+            {sideOptions.map((option) => (
+              <ToggleButton key={option.value} value={option.value}>
+                {option.label}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        </Box>
 
-            <TimeInput
-              label="Ended"
-              value={log.endTime}
-              onChange={(value) =>
-                onUpdate({
-                  endTime: value,
-                })
-              }
-            />
-          </Box>
+        <Typography
+          component="button"
+          type="button"
+          onClick={() => setShowNotes((current) => !current)}
+          sx={{
+            alignSelf: "flex-start",
+            border: 0,
+            p: 0,
+            bgcolor: "transparent",
+            color: "primary.main",
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          {showNotes ? "Hide notes" : "+ Add notes"}
+        </Typography>
 
-          <FormControl fullWidth>
-            <InputLabel id={`side-${log.id}`}>Breast side</InputLabel>
-
-            <Select
-              labelId={`side-${log.id}`}
-              value={log.side}
-              label="Breast side"
-              onChange={(event) =>
-                onUpdate({
-                  side: event.target.value as BreastSide,
-                })
-              }
-            >
-              <MenuItem value="">Not selected</MenuItem>
-
-              <MenuItem value="left">Left</MenuItem>
-
-              <MenuItem value="right">Right</MenuItem>
-
-              <MenuItem value="both">Both</MenuItem>
-            </Select>
-          </FormControl>
-
+        <Collapse in={showNotes}>
           <TextField
-            label="Notes"
+            label="Latch, fussiness, or notes"
+            value={log.notes}
+            onChange={(event) => onUpdate({ notes: event.target.value })}
             multiline
             minRows={2}
-            value={log.notes}
-            onChange={(event) =>
-              onUpdate({
-                notes: event.target.value,
-              })
-            }
+            maxRows={4}
+            size="small"
+            fullWidth
           />
-        </Stack>
-      </CardContent>
-    </Card>
+        </Collapse>
+      </Stack>
+    </FeedingCardShell>
   );
 }

@@ -1,8 +1,9 @@
-import { Box, Button, Stack, Typography } from "@mui/material";
+import { Box, Button, Stack, Typography, useTheme } from "@mui/material";
 
-import ChildCareOutlinedIcon from "@mui/icons-material/ChildCareOutlined";
-import LocalDrinkOutlinedIcon from "@mui/icons-material/LocalDrinkOutlined";
-import RestaurantOutlinedIcon from "@mui/icons-material/RestaurantOutlined";
+import ChildCareRoundedIcon from "@mui/icons-material/ChildCareRounded";
+import LocalDrinkRoundedIcon from "@mui/icons-material/LocalDrinkRounded";
+import RestaurantRoundedIcon from "@mui/icons-material/RestaurantRounded";
+
 import PageHeader from "../components/PageLayout/PageHeader";
 
 import dayjs from "dayjs";
@@ -20,8 +21,12 @@ import {
 } from "../store/slices/feedingSlice";
 
 import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { FONT_DISPLAY } from "../theme/theme";
 
 export default function FeedingPage() {
+  const theme = useTheme();
+  const { nursery } = theme.palette;
+
   const dispatch = useAppDispatch();
 
   const [selectedDate, setSelectedDate] = useState(
@@ -78,96 +83,100 @@ export default function FeedingPage() {
   return (
     <Stack spacing={3}>
       <PageHeader
-        title="Sleep"
+        title="Feeding"
         rightContent={
           <DateNavigator value={selectedDate} onChange={setSelectedDate} />
         }
       />
+
       {activeBabyFeedingLogs.length === 0 ? (
         <Box
           sx={{
             minHeight: 360,
-            border: 1,
-            borderStyle: "dashed",
+            border: "1px dashed",
             borderColor: "divider",
-            borderRadius: 4,
+            borderRadius: 5,
             display: "grid",
             placeItems: "center",
             p: 4,
+            bgcolor: nursery.emptyStateBg,
           }}
         >
           <Stack
-            spacing={2}
-            sx={{
-              alignItems: "center",
-              textAlign: "center",
-            }}
+            spacing={2.5}
+            sx={{ alignItems: "center", textAlign: "center", maxWidth: 340 }}
           >
             <Box
               sx={{
-                width: 72,
-                height: 72,
+                width: 76,
+                height: 76,
                 borderRadius: "50%",
                 display: "grid",
                 placeItems: "center",
-                bgcolor: "action.hover",
-                color: "primary.main",
+                background: `linear-gradient(135deg, ${nursery.sageTint}, ${nursery.sunTint})`,
               }}
             >
-              <RestaurantOutlinedIcon
-                sx={{
-                  fontSize: 36,
-                }}
+              <RestaurantRoundedIcon
+                sx={{ fontSize: 36, color: nursery.sage }}
               />
             </Box>
 
             <Box>
               <Typography
-                variant="h6"
                 sx={{
-                  fontWeight: 700,
+                  fontFamily: FONT_DISPLAY,
+                  fontWeight: 600,
+                  fontSize: 22,
+                  color: "text.primary",
                 }}
               >
                 No feeding logged yet
               </Typography>
 
-              <Typography
-                sx={{
-                  mt: 0.5,
-                  color: "text.secondary",
-                }}
-              >
+              <Typography sx={{ color: "text.secondary", mt: 0.75 }}>
                 Add {activeBaby.name}&apos;s first feeding for this day.
               </Typography>
             </Box>
 
-            <Stack
-              direction={{
-                xs: "column",
-                sm: "row",
-              }}
-              spacing={2}
-            >
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
               <Button
                 variant="contained"
-                startIcon={<ChildCareOutlinedIcon />}
+                size="large"
+                startIcon={<ChildCareRoundedIcon />}
                 onClick={() => handleAddFeeding("breastfeeding")}
+                sx={{
+                  bgcolor: nursery.sage,
+                  color: theme.palette.getContrastText(nursery.sage),
+                  "&:hover": {
+                    bgcolor: nursery.sage,
+                    filter: "brightness(0.92)",
+                  },
+                }}
               >
-                Add breastfeeding
+                Log breastfeeding
               </Button>
 
               <Button
                 variant="outlined"
-                startIcon={<LocalDrinkOutlinedIcon />}
+                size="large"
+                startIcon={<LocalDrinkRoundedIcon />}
                 onClick={() => handleAddFeeding("bottle")}
+                sx={{
+                  borderColor: nursery.sun,
+                  color: nursery.sun,
+                  "&:hover": {
+                    borderColor: nursery.sun,
+                    bgcolor: nursery.sunTint,
+                  },
+                }}
               >
-                Add bottle
+                Log bottle
               </Button>
             </Stack>
           </Stack>
         </Box>
       ) : (
-        <Stack spacing={2}>
+        <Stack spacing={1}>
           {activeBabyFeedingLogs.map((log) => (
             <FeedingCard
               key={log.id}
@@ -178,29 +187,40 @@ export default function FeedingPage() {
           ))}
 
           <Stack
-            direction={{
-              xs: "column",
-              sm: "row",
-            }}
-            spacing={2}
-            sx={{
-              alignSelf: "flex-start",
-            }}
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1.5}
+            sx={{ alignSelf: "flex-start", pt: 1.5, flexWrap: "wrap" }}
           >
             <Button
               variant="outlined"
-              startIcon={<ChildCareOutlinedIcon />}
+              startIcon={<ChildCareRoundedIcon />}
               onClick={() => handleAddFeeding("breastfeeding")}
+              sx={{
+                borderColor: nursery.sage,
+                color: nursery.sage,
+                "&:hover": {
+                  borderColor: nursery.sage,
+                  bgcolor: nursery.sageTint,
+                },
+              }}
             >
-              Add another breastfeeding
+              Add breastfeeding
             </Button>
 
             <Button
               variant="outlined"
-              startIcon={<LocalDrinkOutlinedIcon />}
+              startIcon={<LocalDrinkRoundedIcon />}
               onClick={() => handleAddFeeding("bottle")}
+              sx={{
+                borderColor: nursery.sun,
+                color: nursery.sun,
+                "&:hover": {
+                  borderColor: nursery.sun,
+                  bgcolor: nursery.sunTint,
+                },
+              }}
             >
-              Add another bottle
+              Add bottle
             </Button>
           </Stack>
         </Stack>
