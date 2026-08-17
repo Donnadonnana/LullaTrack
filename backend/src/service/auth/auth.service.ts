@@ -9,6 +9,7 @@ import type {
   FirebaseLoginResponse,
   FirebaseAuthErrorResponse,
 } from "../../types/auth.model.js";
+import { defineSecret } from "firebase-functions/params";
 
 @injectable()
 export class AuthService {
@@ -92,16 +93,19 @@ export class AuthService {
       throw new Error("Email and password are required.");
     }
 
-    const firebaseApiKey = process.env.LULLATRACK_FIREBASE_API_KEY;
-    if (!firebaseApiKey) {
-      throw new Error("FIREBASE_API_KEY is not configured.");
+    const firebaseApiKey = defineSecret("LULLATRACK_FIREBASE_API_KEY");
+
+    const apiKey = firebaseApiKey.value();
+
+    if (!apiKey) {
+      throw new Error("LULLATRACK_FIREBASE_API_KEY is not configured.");
     }
 
     const authBaseUrl = process.env.LULLATRACK_FIREBASE_AUTH_EMULATOR_HOST
       ? `http://${process.env.LULLATRACK_FIREBASE_AUTH_EMULATOR_HOST}`
       : "https://identitytoolkit.googleapis.com";
     const response = await fetch(
-      `${authBaseUrl}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${firebaseApiKey}`,
+      `${authBaseUrl}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
       {
         method: "POST",
         headers: {
