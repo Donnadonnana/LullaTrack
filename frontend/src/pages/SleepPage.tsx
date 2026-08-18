@@ -102,33 +102,32 @@ export default function SleepPage() {
     ),
   );
 
-  useEffect(() => {
-    if (!activeBabyId) {
-      return;
-    }
-
-    void dispatch(
-      fetchSleepLogs({
-        babyId: activeBabyId,
-        date: selectedDate,
-      }),
-    );
-
-    void dispatch(
-      fetchSleepLogs({
-        babyId: activeBabyId,
-        date: previousDate,
-      }),
-    );
-  }, [activeBabyId, selectedDate, previousDate, dispatch]);
-
   const napLogs = activeBabyLogs.filter((log) => log.type === "nap");
   const wakeLog = activeBabyLogs.find((log) => log.type === "wake");
   const hasWakeLog = Boolean(wakeLog);
   const hasNightSleepLog = activeBabyLogs.some((log) => log.type === "night");
 
+  useEffect(() => {
+    if (!activeBabyId) {
+      return;
+    }
+
+    void dispatch(fetchSleepLogs({ babyId: activeBabyId, date: selectedDate }));
+  }, [activeBabyId, selectedDate, dispatch]);
+
+  // Yesterday's logs are only needed to compute last night's sleep, which
+  // requires today's wake-up time to exist first.
+  useEffect(() => {
+    if (!activeBabyId || !hasWakeLog) {
+      return;
+    }
+
+    void dispatch(fetchSleepLogs({ babyId: activeBabyId, date: previousDate }));
+  }, [activeBabyId, previousDate, hasWakeLog, dispatch]);
+
   // "Last night's sleep" = yesterday's night log's asleep time through
   // today's wake-up time. Only resolvable once both sides exist.
+
   const lastNightMinutes =
     previousNightLog?.asleepTime && wakeLog?.wakeTime
       ? calculateOvernightDuration(

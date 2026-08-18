@@ -52,31 +52,69 @@ type StoredSession = {
   expiresAt: number;
 };
 
+let activeStorage: Storage | null = null;
+
+function getActiveStorage(): Storage {
+  if (activeStorage) {
+    return activeStorage;
+  }
+
+  // On a cold load, whichever storage holds the session wins.
+  if (sessionStorage.getItem(STORAGE_KEY)) {
+    activeStorage = sessionStorage;
+  } else {
+    activeStorage = localStorage;
+  }
+
+  return activeStorage;
+}
+
+function setActiveStorage(rememberMe: boolean) {
+  activeStorage = rememberMe ? localStorage : sessionStorage;
+
+  // Clear the other one so a stale session can't be picked up later.
+  const other = rememberMe ? sessionStorage : localStorage;
+  other.removeItem(STORAGE_KEY);
+}
+
+function clearStoredSession() {
+  localStorage.removeItem(STORAGE_KEY);
+  sessionStorage.removeItem(STORAGE_KEY);
+  activeStorage = null;
+}
+
 function getStoredSession(): StoredSession | null {
+  const storage = getActiveStorage();
+
   try {
-    const storedValue = localStorage.getItem(STORAGE_KEY);
+    const storedValue = storage.getItem(STORAGE_KEY);
+
     if (!storedValue) {
       return null;
     }
+
     const parsed = JSON.parse(storedValue) as Partial<StoredSession>;
+
     if (
       typeof parsed.idToken !== "string" ||
       typeof parsed.refreshToken !== "string" ||
       typeof parsed.expiresAt !== "number"
     ) {
-      localStorage.removeItem(STORAGE_KEY);
+      clearStoredSession();
       return null;
     }
+
     return {
       idToken: parsed.idToken,
       refreshToken: parsed.refreshToken,
       expiresAt: parsed.expiresAt,
     };
   } catch {
-    localStorage.removeItem(STORAGE_KEY);
+    clearStoredSession();
     return null;
   }
 }
+
 const storedSession = getStoredSession();
 
 const initialState: AuthState = {
@@ -110,12 +148,17 @@ export const registerAccount = createAsyncThunk<AuthSession, RegisterRequest>(
   },
 );
 
-export const signInAccount = createAsyncThunk<AuthSession, LoginRequest>(
+type SignInArgs = LoginRequest & { rememberMe: boolean };
+
+export const signInAccount = createAsyncThunk<AuthSession, SignInArgs>(
   "auth/login",
-  async (request): Promise<AuthSession> => {
-    const session = await loginUser(request);
+  async ({ rememberMe, ...credentials }): Promise<AuthSession> => {
+    const session = await loginUser(credentials);
 
     const profile = await getCurrentUser(session.idToken);
+
+    // Must run before the reducer calls saveSession.
+    setActiveStorage(rememberMe);
 
     return {
       user: profile.user,
@@ -186,9 +229,8 @@ function saveSession(session: {
   refreshToken: string;
   expiresAt: number;
 }) {
-  localStorage.setItem(
+  getActiveStorage().setItem(
     STORAGE_KEY,
-
     JSON.stringify({
       idToken: session.idToken,
       refreshToken: session.refreshToken,
@@ -245,7 +287,7 @@ const authSlice = createSlice({
       state.status = "idle";
       state.error = null;
       state.registrationDraft = null;
-      localStorage.removeItem(STORAGE_KEY);
+      clearStoredSession();
     },
 
     clearAuthError: (state) => {
@@ -371,7 +413,7 @@ const authSlice = createSlice({
         state.status = "idle";
         state.initialized = true;
 
-        localStorage.removeItem(STORAGE_KEY);
+        clearStoredSession();
       });
   },
 });
