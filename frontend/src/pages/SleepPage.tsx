@@ -127,6 +127,7 @@ export default function SleepPage() {
 
   // "Last night's sleep" = yesterday's night log's asleep time through
   // today's wake-up time. Only resolvable once both sides exist.
+
   const lastNightMinutes =
     previousNightLog?.asleepTime && wakeLog?.wakeTime
       ? calculateOvernightDuration(
