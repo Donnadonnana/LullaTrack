@@ -10,6 +10,7 @@ import type {
   FirebaseAuthErrorResponse,
 } from "../../types/auth.model.js";
 import { defineSecret } from "firebase-functions/params";
+const firebaseApiKey = defineSecret("LULLATRACK_FIREBASE_API_KEY");
 
 @injectable()
 export class AuthService {
@@ -92,8 +93,6 @@ export class AuthService {
     if (!email?.trim() || !password) {
       throw new Error("Email and password are required.");
     }
-
-    const firebaseApiKey = defineSecret("LULLATRACK_FIREBASE_API_KEY");
 
     const apiKey = firebaseApiKey.value();
 
