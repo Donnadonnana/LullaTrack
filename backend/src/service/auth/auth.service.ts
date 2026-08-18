@@ -100,23 +100,24 @@ export class AuthService {
       throw new Error("LULLATRACK_FIREBASE_API_KEY is not configured.");
     }
 
-    const authBaseUrl = process.env.LULLATRACK_FIREBASE_AUTH_EMULATOR_HOST
-      ? `http://${process.env.LULLATRACK_FIREBASE_AUTH_EMULATOR_HOST}`
-      : "https://identitytoolkit.googleapis.com";
-    const response = await fetch(
-      `${authBaseUrl}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email.trim().toLowerCase(),
-          password,
-          returnSecureToken: true,
-        }),
+    const emulatorHost = process.env.LULLATRACK_FIREBASE_AUTH_EMULATOR_HOST;
+
+    const authUrl = emulatorHost
+      ? `http://${emulatorHost}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`
+      : `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;
+
+    const response = await fetch(authUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        email: email.trim().toLowerCase(),
+        password,
+        returnSecureToken: true,
+      }),
+    });
+
     const result = (await response.json()) as
       | FirebaseLoginResponse
       | FirebaseAuthErrorResponse;
