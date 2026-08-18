@@ -1,6 +1,8 @@
-import { Box, Divider, Typography } from "@mui/material";
-
 import type { ReactNode } from "react";
+
+import { Stack, Typography } from "@mui/material";
+
+import { FONT_DISPLAY } from "../../theme/theme";
 
 type PageHeaderProps = {
   title: string;
@@ -9,29 +11,26 @@ type PageHeaderProps = {
 
 export default function PageHeader({ title, rightContent }: PageHeaderProps) {
   return (
-    <div>
-      <Box
+    <Stack
+      direction={{ xs: "column", sm: "row" }}
+      spacing={{ xs: 1.5, sm: 2 }}
+      sx={{
+        alignItems: { xs: "stretch", sm: "center" },
+        justifyContent: "space-between",
+      }}
+    >
+      <Typography
         sx={{
-          display: "grid",
-          gridTemplateColumns: "1fr auto 1fr",
-          alignItems: "center",
+          fontFamily: FONT_DISPLAY,
+          fontWeight: 600,
+          fontSize: { xs: 24, sm: 28 },
+          color: "text.primary",
         }}
       >
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 700,
-            letterSpacing: "-0.03em",
-          }}
-        >
-          {title}
-        </Typography>
+        {title}
+      </Typography>
 
-        {rightContent && <Box>{rightContent}</Box>}
-
-        <Box />
-      </Box>
-      <Divider sx={{ mt: 2 }} />
-    </div>
+      {rightContent}
+    </Stack>
   );
 }
