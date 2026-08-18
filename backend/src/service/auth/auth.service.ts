@@ -10,6 +10,7 @@ import type {
   FirebaseAuthErrorResponse,
 } from "../../types/auth.model.js";
 import { defineSecret } from "firebase-functions/params";
+const firebaseApiKey = defineSecret("LULLATRACK_FIREBASE_API_KEY");
 
 @injectable()
 export class AuthService {
@@ -93,38 +94,37 @@ export class AuthService {
       throw new Error("Email and password are required.");
     }
 
-    const firebaseApiKey = defineSecret("LULLATRACK_FIREBASE_API_KEY");
-
     const apiKey = firebaseApiKey.value();
 
     if (!apiKey) {
       throw new Error("LULLATRACK_FIREBASE_API_KEY is not configured.");
     }
 
-    const authBaseUrl = process.env.LULLATRACK_FIREBASE_AUTH_EMULATOR_HOST
-      ? `http://${process.env.LULLATRACK_FIREBASE_AUTH_EMULATOR_HOST}`
-      : "https://identitytoolkit.googleapis.com";
-    const response = await fetch(
-      `${authBaseUrl}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email.trim().toLowerCase(),
-          password,
-          returnSecureToken: true,
-        }),
+    const emulatorHost = process.env.LULLATRACK_FIREBASE_AUTH_EMULATOR_HOST;
+
+    const authUrl = emulatorHost
+      ? `http://${emulatorHost}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`
+      : `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;
+
+    const response = await fetch(authUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        email: email.trim().toLowerCase(),
+        password,
+        returnSecureToken: true,
+      }),
+    });
+
     const result = (await response.json()) as
       | FirebaseLoginResponse
       | FirebaseAuthErrorResponse;
+
     if (!response.ok || !("idToken" in result)) {
       const firebaseMessage =
         "error" in result ? result.error?.message : undefined;
-
       throw new Error(this.getLoginErrorMessage(firebaseMessage));
     }
     return {

@@ -2,6 +2,7 @@ import "reflect-metadata";
 
 import { setGlobalOptions } from "firebase-functions/v2";
 import { onRequest } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
 
 import { App } from "./app";
 import DIContainer from "./di-container";
@@ -17,6 +18,10 @@ setGlobalOptions({
   maxInstances: 10,
 });
 
+// Must be declared here so Firebase binds it to the function at deploy time.
+// AuthService calls .value() on the same secret name at runtime.
+const firebaseApiKey = defineSecret("LULLATRACK_FIREBASE_API_KEY");
+
 const app = new App({
   routes: [
     DIContainer.get(BabyRoutes),
@@ -27,4 +32,4 @@ const app = new App({
   ],
 });
 
-export const api = onRequest(app.app);
+export const api = onRequest({ secrets: [firebaseApiKey] }, app.app);
