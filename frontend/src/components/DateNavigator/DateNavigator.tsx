@@ -1,8 +1,8 @@
 import { Box, IconButton, Popover, Stack, Typography } from "@mui/material";
 
-import ChevronLeftOutlinedIcon from "@mui/icons-material/ChevronLeftOutlined";
-import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
-import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
+import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 
@@ -51,15 +51,20 @@ export default function DateNavigator({ value, onChange }: DateNavigatorProps) {
     <>
       <Stack
         direction="row"
-        spacing={1}
+        spacing={0.5}
         sx={{
           alignItems: "center",
           justifyContent: "center",
-          width: "100%",
+          width: { xs: "100%", sm: "auto" },
         }}
       >
-        <IconButton onClick={handlePreviousDay} aria-label="Previous day">
-          <ChevronLeftOutlinedIcon />
+        <IconButton
+          onClick={handlePreviousDay}
+          aria-label="Previous day"
+          size="small"
+          sx={{ color: "text.secondary", flexShrink: 0 }}
+        >
+          <ChevronLeftRoundedIcon />
         </IconButton>
 
         <Box
@@ -67,12 +72,11 @@ export default function DateNavigator({ value, onChange }: DateNavigatorProps) {
           type="button"
           onClick={handleCalendarOpen}
           sx={{
-            minWidth: {
-              xs: 220,
-              sm: 300,
-            },
-            px: 2,
-            py: 1.25,
+            // Fills the row on phones, sizes to content on larger screens.
+            flexGrow: { xs: 1, sm: 0 },
+            minWidth: { xs: 0, sm: 240 },
+            px: { xs: 1.5, sm: 2 },
+            py: { xs: 0.75, sm: 1 },
             border: 1,
             borderColor: "divider",
             borderRadius: 3,
@@ -91,40 +95,49 @@ export default function DateNavigator({ value, onChange }: DateNavigatorProps) {
           <Stack
             direction="row"
             spacing={1}
-            sx={{
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            sx={{ alignItems: "center", justifyContent: "center", minWidth: 0 }}
           >
-            <CalendarMonthOutlinedIcon
+            <CalendarMonthRoundedIcon
               sx={{
+                fontSize: { xs: 18, sm: 22 },
                 color: "primary.main",
+                flexShrink: 0,
               }}
             />
 
-            <Box>
-              <Typography
-                sx={{
-                  fontWeight: 700,
-                }}
-              >
+            {/* One compact line on phones, two-line block on desktop. */}
+            <Typography
+              noWrap
+              sx={{
+                display: { xs: "block", sm: "none" },
+                fontWeight: 600,
+                fontSize: 14,
+              }}
+            >
+              {isToday ? "Today" : selectedDate.format("ddd")} ·{" "}
+              {selectedDate.format("MMM D")}
+            </Typography>
+
+            <Box sx={{ display: { xs: "none", sm: "block" } }}>
+              <Typography sx={{ fontWeight: 700 }}>
                 {isToday ? "Today" : selectedDate.format("dddd")}
               </Typography>
 
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "text.secondary",
-                }}
-              >
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 {selectedDate.format("MMMM D, YYYY")}
               </Typography>
             </Box>
           </Stack>
         </Box>
 
-        <IconButton onClick={handleNextDay} aria-label="Next day" disabled={isToday}>
-          <ChevronRightOutlinedIcon />
+        <IconButton
+          onClick={handleNextDay}
+          aria-label="Next day"
+          size="small"
+          disabled={isToday}
+          sx={{ color: "text.secondary", flexShrink: 0 }}
+        >
+          <ChevronRightRoundedIcon />
         </IconButton>
       </Stack>
 
@@ -132,20 +145,16 @@ export default function DateNavigator({ value, onChange }: DateNavigatorProps) {
         open={calendarOpen}
         anchorEl={anchorElement}
         onClose={handleCalendarClose}
-        anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "center",
-        }}
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "center",
-        }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        transformOrigin={{ vertical: "top", horizontal: "center" }}
         slotProps={{
           paper: {
             sx: {
               mt: 1,
               borderRadius: 3,
               overflow: "hidden",
+              // Keep the calendar inside the viewport on narrow screens.
+              maxWidth: "calc(100vw - 32px)",
             },
           },
         }}
