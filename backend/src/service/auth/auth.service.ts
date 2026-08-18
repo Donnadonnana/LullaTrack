@@ -121,10 +121,10 @@ export class AuthService {
     const result = (await response.json()) as
       | FirebaseLoginResponse
       | FirebaseAuthErrorResponse;
+
     if (!response.ok || !("idToken" in result)) {
       const firebaseMessage =
         "error" in result ? result.error?.message : undefined;
-
       throw new Error(this.getLoginErrorMessage(firebaseMessage));
     }
     return {
