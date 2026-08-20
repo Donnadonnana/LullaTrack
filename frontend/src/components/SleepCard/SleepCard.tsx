@@ -56,9 +56,23 @@ function isLogComplete(type: SleepLog["type"], sleep: SleepDraft): boolean {
     return Boolean(sleep.onBedTime && sleep.asleepTime);
   }
 
-  return Boolean(
-    sleep.onBedTime && sleep.asleepTime && sleep.wakeTime && sleep.pickupTime,
-  );
+  // Nap: on-bed + pickup is enough to consider it "done" — asleep/wake are
+  // often missing when baby is put down, cries the whole time, and gets
+  // picked back up without ever actually falling asleep.
+  return Boolean(sleep.onBedTime && sleep.pickupTime);
+}
+
+function isInProgress(type: SleepLog["type"], sleep: SleepDraft): boolean {
+  if (type === "wake") {
+    return Boolean(sleep.wakeTime) && !sleep.pickupTime;
+  }
+
+  if (type === "night") {
+    return Boolean(sleep.onBedTime) && !sleep.asleepTime;
+  }
+
+  // Nap: started (on bed) but not yet picked up.
+  return Boolean(sleep.onBedTime) && !sleep.pickupTime;
 }
 
 export default function SleepCard({ log }: SleepCardProps) {
@@ -137,15 +151,20 @@ export default function SleepCard({ log }: SleepCardProps) {
       : nursery.moonTint;
   const accentHover = isWake ? "#C96F55" : isNap ? "#CC8530" : "#5A5296";
 
-  // Night sleep has no same-day wake time, so there's no duration to show —
-  // just the on-bed / asleep times. Wake and nap logs both have a
-  // start → end pair we can turn into a duration.
-  const durationLabel = isWake ? "Awake before pickup" : "Slept";
-  const rangeStart = isWake ? draft.wakeTime : draft.asleepTime;
-  const rangeEnd = isWake ? draft.pickupTime : draft.wakeTime;
-  const durationValue = isNight
-    ? null
-    : calculateDuration(rangeStart, rangeEnd);
+  // Wake logs: single duration, awake time before pickup.
+  const wakeDurationValue = isWake
+    ? calculateDuration(draft.wakeTime, draft.pickupTime)
+    : null;
+
+  // Nap logs: two independent durations. Sleep only exists if baby actually
+  // fell asleep; in-bed always exists once pickup is logged, regardless.
+  const napSleepMinutes = isNap
+    ? calculateDuration(draft.asleepTime, draft.wakeTime)
+    : null;
+
+  const napInBedMinutes = isNap
+    ? calculateDuration(draft.onBedTime, draft.pickupTime)
+    : null;
 
   const updateField = (field: keyof SleepDraft, value: string) => {
     setDraft((current) => ({
@@ -190,6 +209,8 @@ export default function SleepCard({ log }: SleepCardProps) {
       console.error("Unable to delete sleep log:", error);
     }
   };
+
+  const inProgress = isInProgress(log.type, draft);
 
   return (
     <Card
@@ -261,35 +282,31 @@ export default function SleepCard({ log }: SleepCardProps) {
                     {sleepTitle}
                   </Typography>
 
-                  {!isExpanded &&
-                    !isNight &&
-                    durationValue !== null &&
-                    !isWake && (
-                      <>
-                        <Typography sx={{ color: "text.disabled" }}>
-                          ·
-                        </Typography>
-                        <Typography
-                          sx={{ color: "text.secondary", fontSize: 14 }}
-                        >
-                          {rangeStart}–{rangeEnd}
-                        </Typography>
-                        <Typography sx={{ color: "text.disabled" }}>
-                          ·
-                        </Typography>
-                        <Typography
-                          sx={{
-                            fontFamily: FONT_DISPLAY,
-                            fontWeight: 600,
-                            fontSize: 15,
-                            color: accent,
-                          }}
-                        >
-                          {formatDuration(durationValue)}
-                        </Typography>
-                      </>
-                    )}
-                  {isWake && (
+                  {inProgress && (
+                    <Box
+                      sx={{
+                        px: 1,
+                        py: 0.25,
+                        borderRadius: 999,
+                        bgcolor: accentTint,
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: accent,
+                          textTransform: "uppercase",
+                          letterSpacing: 0.3,
+                        }}
+                      >
+                        In progress
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Wake: single figure, unchanged */}
+                  {isWake && draft.pickupTime && (
                     <Typography
                       sx={{
                         fontFamily: FONT_DISPLAY,
@@ -298,9 +315,11 @@ export default function SleepCard({ log }: SleepCardProps) {
                         color: accent,
                       }}
                     >
-                      {rangeEnd}
+                      {draft.pickupTime}
                     </Typography>
                   )}
+
+                  {/* Night: unchanged */}
                   {!isExpanded &&
                     isNight &&
                     draft.onBedTime &&
@@ -316,6 +335,48 @@ export default function SleepCard({ log }: SleepCardProps) {
                         </Typography>
                       </>
                     )}
+
+                  {/* Nap: sleep + in-bed, or just in-bed if baby never slept */}
+                  {!isExpanded && isNap && napInBedMinutes !== null && (
+                    <>
+                      <Typography sx={{ color: "text.disabled" }}>·</Typography>
+
+                      {napSleepMinutes !== null ? (
+                        <>
+                          <Typography
+                            sx={{
+                              fontFamily: FONT_DISPLAY,
+                              fontWeight: 600,
+                              fontSize: 15,
+                              color: accent,
+                            }}
+                          >
+                            Slept {formatDuration(napSleepMinutes)}
+                          </Typography>
+                          <Typography sx={{ color: "text.disabled" }}>
+                            ·
+                          </Typography>
+                          <Typography
+                            sx={{ color: "text.secondary", fontSize: 14 }}
+                          >
+                            In bed {formatDuration(napInBedMinutes)}
+                          </Typography>
+                        </>
+                      ) : (
+                        <Typography
+                          sx={{
+                            fontFamily: FONT_DISPLAY,
+                            fontWeight: 600,
+                            fontSize: 15,
+                            color: "text.secondary",
+                          }}
+                        >
+                          In bed {formatDuration(napInBedMinutes)} · didn't fall
+                          asleep
+                        </Typography>
+                      )}
+                    </>
+                  )}
                 </Stack>
 
                 {!isExpanded && draft.notes && (
@@ -470,6 +531,22 @@ export default function SleepCard({ log }: SleepCardProps) {
                 )}
               </Box>
 
+              {isNap &&
+                !napSleepMinutes &&
+                draft.onBedTime &&
+                draft.pickupTime && (
+                  <Typography
+                    sx={{
+                      fontSize: 13,
+                      color: "text.secondary",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    No asleep/woke time entered — this nap will be tracked as
+                    time in bed only.
+                  </Typography>
+                )}
+
               <Typography
                 component="button"
                 type="button"
@@ -511,19 +588,16 @@ export default function SleepCard({ log }: SleepCardProps) {
                 }}
               >
                 <Box>
-                  {!isNight && durationValue !== null && (
+                  {isWake && wakeDurationValue !== null && (
                     <Typography sx={{ color: "text.secondary", fontSize: 14 }}>
-                      {durationLabel}{" "}
+                      Awake before pickup{" "}
                       <Box
                         component="span"
-                        sx={{
-                          fontFamily: FONT_DISPLAY,
-                          fontWeight: 600,
-                        }}
+                        sx={{ fontFamily: FONT_DISPLAY, fontWeight: 600 }}
                       >
-                        {formatDuration(durationValue)}
+                        {formatDuration(wakeDurationValue)}
                       </Box>{" "}
-                      · {rangeStart}–{rangeEnd}
+                      · {draft.wakeTime}–{draft.pickupTime}
                     </Typography>
                   )}
 
@@ -541,6 +615,52 @@ export default function SleepCard({ log }: SleepCardProps) {
                         {draft.onBedTime}
                       </Box>{" "}
                       · Asleep by {draft.asleepTime}
+                    </Typography>
+                  )}
+
+                  {isNap && napInBedMinutes !== null && (
+                    <Typography sx={{ color: "text.secondary", fontSize: 14 }}>
+                      {napSleepMinutes !== null ? (
+                        <>
+                          Slept{" "}
+                          <Box
+                            component="span"
+                            sx={{
+                              fontFamily: FONT_DISPLAY,
+                              fontWeight: 600,
+                              color: "text.primary",
+                            }}
+                          >
+                            {formatDuration(napSleepMinutes)}
+                          </Box>{" "}
+                          · In bed{" "}
+                          <Box
+                            component="span"
+                            sx={{
+                              fontFamily: FONT_DISPLAY,
+                              fontWeight: 600,
+                              color: "text.primary",
+                            }}
+                          >
+                            {formatDuration(napInBedMinutes)}
+                          </Box>
+                        </>
+                      ) : (
+                        <>
+                          In bed{" "}
+                          <Box
+                            component="span"
+                            sx={{
+                              fontFamily: FONT_DISPLAY,
+                              fontWeight: 600,
+                              color: "text.primary",
+                            }}
+                          >
+                            {formatDuration(napInBedMinutes)}
+                          </Box>{" "}
+                          · didn't fall asleep
+                        </>
+                      )}
                     </Typography>
                   )}
                 </Box>
