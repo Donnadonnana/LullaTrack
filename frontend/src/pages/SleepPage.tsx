@@ -1,30 +1,9 @@
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Stack,
-  Typography,
-  useTheme,
-} from "@mui/material";
-
-import BedtimeRoundedIcon from "@mui/icons-material/BedtimeRounded";
-import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
-import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
-import WbTwilightRoundedIcon from "@mui/icons-material/WbTwilightRounded";
-
-import { useEffect, useState } from "react";
-
+import { Alert, Box, CircularProgress, Stack, Typography } from "@mui/material";
+import { useState } from "react";
 import dayjs from "dayjs";
 
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-
-import {
-  createSleepLog,
-  fetchSleepLogs,
-  type SleepLog,
-  type SleepType,
-} from "../store/slices/sleepSlice";
+import { createSleepLog, type SleepType } from "../store/slices/sleepSlice";
+import { useAppDispatch } from "../store/hooks";
 
 import SleepCard from "../components/SleepCard/SleepCard";
 import WakeWindow from "../components/WakeWindow/WakeWindow";
@@ -32,129 +11,36 @@ import DaySummary from "../components/DaySummary/DaySummary";
 import LastNightSummary from "../components/LastNightSummary/LastNightSummary";
 import DateNavigator from "../components/DateNavigator/DateNavigator";
 import PageHeader from "../components/PageLayout/PageHeader";
+import SleepEmptyState from "../components/SleepPage/SleepEmptyState";
+import SleepActionButtons from "../components/SleepPage/SleepActionButtons";
 
-import {
-  calculateDuration,
-  calculateOvernightDuration,
-  calculateWakeWindow,
-} from "../utils/time";
-
-const FONT_DISPLAY = "'Fraunces', Georgia, serif";
-
-// The list should read as a timeline, not a creation-order list — so we sort
-// by each log's actual start time rather than sleepNumber. Wake logs start
-// at wakeTime; nap/night logs start at onBedTime. Logs missing a time yet
-// (just created, not filled in) sort to the end instead of jumping around.
-function getLogSortKey(log: SleepLog): string {
-  const key =
-    log.type === "wake"
-      ? log.wakeTime
-      : log.onBedTime || log.asleepTime || log.wakeTime || log.pickupTime;
-
-  return key || "99:99";
-}
-
-function average(values: number[]): number | null {
-  if (values.length === 0) {
-    return null;
-  }
-
-  return Math.round(
-    values.reduce((sum, value) => sum + value, 0) / values.length,
-  );
-}
+import { useSleepDayData } from "../hooks/useSleepDayData";
 
 export default function SleepPage() {
   const dispatch = useAppDispatch();
-  const { nursery } = useTheme().palette;
+
   const [selectedDate, setSelectedDate] = useState(
     dayjs().format("YYYY-MM-DD"),
   );
 
-  const previousDate = dayjs(selectedDate)
-    .subtract(1, "day")
-    .format("YYYY-MM-DD");
-
-  const { babies, activeBabyId } = useAppSelector((state) => state.babies);
-
-  const { loading, error } = useAppSelector((state) => state.sleep);
-
-  const activeBaby = babies.find((baby) => baby.id === activeBabyId);
-
-  const activeBabyLogs = useAppSelector((state) =>
-    state.sleep.logs
-      .filter((log) => log.babyId === activeBabyId && log.date === selectedDate)
-      .slice()
-      .sort((first, second) =>
-        getLogSortKey(first).localeCompare(getLogSortKey(second)),
-      ),
-  );
-
-  // Last night's sleep spans two calendar days (bedtime yesterday, wake-up
-  // today), so we need yesterday's logs in the store too — just to read
-  // the night log's asleepTime and pair it with today's wake log.
-  const previousNightLog = useAppSelector((state) =>
-    state.sleep.logs.find(
-      (log) =>
-        log.babyId === activeBabyId &&
-        log.date === previousDate &&
-        log.type === "night",
-    ),
-  );
-
-  const napLogs = activeBabyLogs.filter((log) => log.type === "nap");
-  const wakeLog = activeBabyLogs.find((log) => log.type === "wake");
-  const hasWakeLog = Boolean(wakeLog);
-  const hasNightSleepLog = activeBabyLogs.some((log) => log.type === "night");
-
-  useEffect(() => {
-    if (!activeBabyId) {
-      return;
-    }
-
-    void dispatch(fetchSleepLogs({ babyId: activeBabyId, date: selectedDate }));
-  }, [activeBabyId, selectedDate, dispatch]);
-
-  // Yesterday's logs are only needed to compute last night's sleep, which
-  // requires today's wake-up time to exist first.
-  useEffect(() => {
-    if (!activeBabyId || !hasWakeLog) {
-      return;
-    }
-
-    void dispatch(fetchSleepLogs({ babyId: activeBabyId, date: previousDate }));
-  }, [activeBabyId, previousDate, hasWakeLog, dispatch]);
-
-  // "Last night's sleep" = yesterday's night log's asleep time through
-  // today's wake-up time. Only resolvable once both sides exist.
-
-  const lastNightMinutes =
-    previousNightLog?.asleepTime && wakeLog?.wakeTime
-      ? calculateOvernightDuration(
-          previousNightLog.asleepTime,
-          wakeLog.wakeTime,
-        )
-      : null;
-
-  const totalNapMinutes = napLogs.reduce((total, log) => {
-    const duration = calculateDuration(log.asleepTime, log.wakeTime);
-    return total + (duration ?? 0);
-  }, 0);
-
-  const totalSleepMinutes =
-    lastNightMinutes !== null ? totalNapMinutes + lastNightMinutes : null;
-
-  const avgSleepLatencyMinutes = average(
-    napLogs
-      .map((log) => calculateDuration(log.onBedTime, log.asleepTime))
-      .filter((value): value is number => value !== null),
-  );
-
-  const avgAwakeBeforePickupMinutes = average(
-    napLogs
-      .map((log) => calculateDuration(log.wakeTime, log.pickupTime))
-      .filter((value): value is number => value !== null),
-  );
+  const {
+    activeBaby,
+    activeBabyId,
+    activeBabyLogs,
+    previousNightLog,
+    napLogs,
+    wakeLog,
+    hasWakeLog,
+    hasNightSleepLog,
+    loading,
+    error,
+    lastNightMinutes,
+    totalNapMinutes,
+    totalSleepMinutes,
+    avgSleepLatencyMinutes,
+    avgAwakeBeforePickupMinutes,
+    calculateWakeWindow,
+  } = useSleepDayData(selectedDate);
 
   const handleAddSleep = async (type: SleepType) => {
     if (!activeBabyId) {
@@ -169,10 +55,8 @@ export default function SleepPage() {
       return;
     }
 
-    const napCount = napLogs.length;
-
     const sleepNumber =
-      type === "wake" ? 0 : type === "night" ? 1 : napCount + 1;
+      type === "wake" ? 0 : type === "night" ? 1 : napLogs.length + 1;
 
     try {
       await dispatch(
@@ -235,110 +119,14 @@ export default function SleepPage() {
           <CircularProgress color="primary" />
         </Box>
       ) : activeBabyLogs.length === 0 ? (
-        <Box
-          sx={{
-            minHeight: 360,
-            border: "1px dashed",
-            borderColor: "divider",
-            borderRadius: 5,
-            display: "grid",
-            placeItems: "center",
-            p: 4,
-            bgcolor: nursery.emptyStateBg,
-          }}
-        >
-          <Stack
-            spacing={2.5}
-            sx={{ alignItems: "center", textAlign: "center", maxWidth: 340 }}
-          >
-            <Box
-              sx={{
-                width: 76,
-                height: 76,
-                borderRadius: "50%",
-                display: "grid",
-                placeItems: "center",
-                background: `linear-gradient(135deg, ${nursery.dawnTint}, ${nursery.sunTint})`,
-              }}
-            >
-              <BedtimeRoundedIcon sx={{ fontSize: 36, color: nursery.moon }} />
-            </Box>
-
-            <Box>
-              <Typography
-                sx={{
-                  fontFamily: FONT_DISPLAY,
-                  fontWeight: 600,
-                  fontSize: 22,
-                  color: "text.primary",
-                }}
-              >
-                Start the day
-              </Typography>
-
-              <Typography sx={{ color: "text.secondary", mt: 0.75 }}>
-                Log what time {activeBaby.name} woke up this morning — that's
-                the start of today's timeline.
-              </Typography>
-            </Box>
-
-            <Stack spacing={1.25} sx={{ width: "100%" }}>
-              <Button
-                variant="contained"
-                size="large"
-                disableElevation
-                startIcon={<WbTwilightRoundedIcon />}
-                onClick={() => void handleAddSleep("wake")}
-                sx={{
-                  borderRadius: 999,
-                  bgcolor: nursery.dawn,
-                  "&:hover": { bgcolor: "#C96F55" },
-                }}
-              >
-                Log wake-up time
-              </Button>
-
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25}>
-                <Button
-                  variant="outlined"
-                  startIcon={<LightModeRoundedIcon />}
-                  onClick={() => void handleAddSleep("nap")}
-                  sx={{
-                    borderColor: nursery.sun,
-                    color: nursery.sun,
-                    "&:hover": {
-                      borderColor: nursery.sun,
-                      bgcolor: nursery.sunTint,
-                    },
-                  }}
-                >
-                  Add a nap instead
-                </Button>
-
-                <Button
-                  variant="outlined"
-                  startIcon={<DarkModeRoundedIcon />}
-                  onClick={() => void handleAddSleep("night")}
-                  sx={{
-                    borderColor: nursery.moon,
-                    color: nursery.moon,
-                    "&:hover": {
-                      borderColor: nursery.moon,
-                      bgcolor: nursery.moonTint,
-                    },
-                  }}
-                >
-                  Log night sleep
-                </Button>
-              </Stack>
-            </Stack>
-          </Stack>
-        </Box>
+        <SleepEmptyState
+          babyName={activeBaby.name}
+          onAddSleep={handleAddSleep}
+        />
       ) : (
         <Stack spacing={0.5}>
           {activeBabyLogs.map((log, index) => {
             const previousLog = index > 0 ? activeBabyLogs[index - 1] : null;
-
             const wakeWindow = previousLog
               ? calculateWakeWindow(previousLog.pickupTime, log.onBedTime)
               : null;
@@ -348,71 +136,16 @@ export default function SleepPage() {
                 {wakeWindow !== null && (
                   <WakeWindow durationMinutes={wakeWindow} />
                 )}
-
                 <SleepCard log={log} babyName={activeBaby.name} />
               </Box>
             );
           })}
 
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={1.5}
-            sx={{ alignSelf: "flex-start", pt: 1.5, flexWrap: "wrap" }}
-          >
-            {!hasWakeLog && (
-              <Button
-                variant="outlined"
-                startIcon={<WbTwilightRoundedIcon />}
-                onClick={() => void handleAddSleep("wake")}
-                sx={{
-                  borderColor: nursery.dawn,
-                  color: nursery.dawn,
-                  "&:hover": {
-                    borderColor: nursery.dawn,
-                    bgcolor: nursery.dawnTint,
-                  },
-                }}
-              >
-                Add wake-up time
-              </Button>
-            )}
-
-            {!hasNightSleepLog && (
-              <Button
-                variant="outlined"
-                startIcon={<LightModeRoundedIcon />}
-                onClick={() => void handleAddSleep("nap")}
-                sx={{
-                  borderColor: nursery.sun,
-                  color: nursery.sun,
-                  "&:hover": {
-                    borderColor: nursery.sun,
-                    bgcolor: nursery.sunTint,
-                  },
-                }}
-              >
-                Add another nap
-              </Button>
-            )}
-
-            {!hasNightSleepLog && (
-              <Button
-                variant="outlined"
-                startIcon={<DarkModeRoundedIcon />}
-                onClick={() => void handleAddSleep("night")}
-                sx={{
-                  borderColor: nursery.moon,
-                  color: nursery.moon,
-                  "&:hover": {
-                    borderColor: nursery.moon,
-                    bgcolor: nursery.moonTint,
-                  },
-                }}
-              >
-                Add night sleep
-              </Button>
-            )}
-          </Stack>
+          <SleepActionButtons
+            hasWakeLog={hasWakeLog}
+            hasNightSleepLog={hasNightSleepLog}
+            onAddSleep={handleAddSleep}
+          />
         </Stack>
       )}
     </Stack>
