@@ -13,10 +13,12 @@ export type Baby = {
   updatedAt: number;
 };
 
-export type CreateBabyRequest = Pick<
-  Baby,
-  "userId" | "name" | "dateOfBirth" | "gender" | "feedingMethod"
->;
+export type CreateBabyRequest = {
+  name: string;
+  gender: BabyGender;
+  feedingMethod: FeedingMethod;
+  dateOfBirth: string;
+};
 
 export type UpdateBabyRequest = Partial<
   Pick<Baby, "name" | "dateOfBirth" | "gender" | "feedingMethod">
