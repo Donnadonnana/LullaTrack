@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 import {
   Box,
@@ -54,6 +54,17 @@ export default function FeedingCardShell({
   const { nursery } = useTheme().palette;
 
   const [isExpanded, setIsExpanded] = useState(!isComplete);
+  const wasComplete = useRef(isComplete);
+
+  useEffect(() => {
+    if (wasComplete.current === isComplete) {
+      return;
+    }
+
+    wasComplete.current = isComplete;
+    // Deliberately not calling setIsExpanded here — completeness
+    // changing (e.g. right after Save) should not force a collapse.
+  }, [isComplete]);
 
   return (
     <Card
