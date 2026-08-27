@@ -18,6 +18,7 @@ import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDown
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined";
+import dayjs from "dayjs";
 
 import { useNavigate } from "react-router-dom";
 
@@ -94,6 +95,37 @@ export default function BabySelector() {
   const activeBabyColor = getBabyColor(activeBaby.gender);
   const activeBabyBackground = getBabyBackground(activeBaby.gender);
 
+  function formatBabyAge(dateOfBirth: string): string {
+    const birth = dayjs(dateOfBirth);
+
+    if (!birth.isValid()) {
+      return "";
+    }
+
+    const now = dayjs();
+    const totalMonths = now.diff(birth, "month");
+
+    if (totalMonths < 1) {
+      const days = now.diff(birth, "day");
+      return days <= 0
+        ? "Newborn"
+        : `${days} ${days === 1 ? "day" : "days"} old`;
+    }
+
+    if (totalMonths < 24) {
+      return `${totalMonths} ${totalMonths === 1 ? "month" : "months"} old`;
+    }
+
+    const years = Math.floor(totalMonths / 12);
+    const remainingMonths = totalMonths % 12;
+
+    if (remainingMonths === 0) {
+      return `${years} ${years === 1 ? "year" : "years"} old`;
+    }
+
+    return `${years}y ${remainingMonths}m old`;
+  }
+
   return (
     <>
       <ButtonBase
@@ -138,7 +170,7 @@ export default function BabySelector() {
             </Typography>
 
             <Typography variant="body2" color="text.secondary">
-              {activeBaby.dateOfBirth}{" "}
+              {formatBabyAge(activeBaby.dateOfBirth)}
             </Typography>
           </Box>
 
@@ -218,6 +250,7 @@ export default function BabySelector() {
 
                 <ListItemText
                   primary={baby.name}
+                  secondary={formatBabyAge(baby.dateOfBirth)}
                   slotProps={{
                     primary: {
                       noWrap: true,
@@ -225,9 +258,11 @@ export default function BabySelector() {
                         fontWeight: isActive ? 700 : 500,
                       },
                     },
+                    secondary: {
+                      sx: { fontSize: 12 },
+                    },
                   }}
                 />
-
                 {isActive && (
                   <CheckOutlinedIcon
                     color="primary"

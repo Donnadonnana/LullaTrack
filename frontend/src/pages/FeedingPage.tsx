@@ -1,4 +1,12 @@
-import { Box, Button, Stack, Typography, useTheme } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Stack,
+  Typography,
+  useTheme,
+} from "@mui/material";
 
 import ChildCareRoundedIcon from "@mui/icons-material/ChildCareRounded";
 import LocalDrinkRoundedIcon from "@mui/icons-material/LocalDrinkRounded";
@@ -7,16 +15,14 @@ import RestaurantRoundedIcon from "@mui/icons-material/RestaurantRounded";
 import PageHeader from "../components/PageLayout/PageHeader";
 
 import dayjs from "dayjs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import DateNavigator from "../components/DateNavigator/DateNavigator";
 import FeedingCard from "../components/FeedingCard/FeedingCard";
 
 import {
-  addFeedingLog,
-  deleteFeedingLog,
-  updateFeedingLog,
-  type FeedingLog,
+  createFeedingLog,
+  fetchFeedingLogs,
   type FeedingType,
 } from "../store/slices/feedingSlice";
 
@@ -34,14 +40,28 @@ export default function FeedingPage() {
   );
 
   const { babies, activeBabyId } = useAppSelector((state) => state.babies);
+  const { loading, error } = useAppSelector((state) => state.feeding);
 
   const activeBaby = babies.find((baby) => baby.id === activeBabyId);
 
   const activeBabyFeedingLogs = useAppSelector((state) =>
-    state.feeding.logs.filter(
-      (log) => log.babyId === activeBabyId && log.date === selectedDate,
-    ),
+    state.feeding.logs
+      .filter((log) => log.babyId === activeBabyId && log.date === selectedDate)
+      .slice()
+      .sort((first, second) =>
+        (first.startTime || "99:99").localeCompare(second.startTime || "99:99"),
+      ),
   );
+
+  useEffect(() => {
+    if (!activeBabyId) {
+      return;
+    }
+
+    void dispatch(
+      fetchFeedingLogs({ babyId: activeBabyId, date: selectedDate }),
+    );
+  }, [activeBabyId, selectedDate, dispatch]);
 
   const handleAddFeeding = (type: FeedingType) => {
     if (!activeBabyId) {
@@ -51,27 +71,14 @@ export default function FeedingPage() {
     const feedingNumber =
       activeBabyFeedingLogs.filter((log) => log.type === type).length + 1;
 
-    dispatch(
-      addFeedingLog({
+    void dispatch(
+      createFeedingLog({
         babyId: activeBabyId,
         date: selectedDate,
         type,
         feedingNumber,
       }),
     );
-  };
-
-  const handleUpdateFeeding = (id: string, changes: Partial<FeedingLog>) => {
-    dispatch(
-      updateFeedingLog({
-        id,
-        changes,
-      }),
-    );
-  };
-
-  const handleDeleteFeeding = (id: string) => {
-    dispatch(deleteFeedingLog(id));
   };
 
   if (!activeBaby) {
@@ -89,7 +96,17 @@ export default function FeedingPage() {
         }
       />
 
-      {activeBabyFeedingLogs.length === 0 ? (
+      {error && (
+        <Alert severity="error" sx={{ borderRadius: 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      {loading && activeBabyFeedingLogs.length === 0 ? (
+        <Box sx={{ minHeight: 360, display: "grid", placeItems: "center" }}>
+          <CircularProgress color="primary" />
+        </Box>
+      ) : activeBabyFeedingLogs.length === 0 ? (
         <Box
           sx={{
             minHeight: 360,
@@ -178,12 +195,7 @@ export default function FeedingPage() {
       ) : (
         <Stack spacing={1}>
           {activeBabyFeedingLogs.map((log) => (
-            <FeedingCard
-              key={log.id}
-              log={log}
-              onUpdate={(changes) => handleUpdateFeeding(log.id, changes)}
-              onDelete={() => handleDeleteFeeding(log.id)}
-            />
+            <FeedingCard key={log.id} log={log} />
           ))}
 
           <Stack

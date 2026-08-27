@@ -19,9 +19,11 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 
 import {
+  createBaby,
   finishOnboarding,
   nextOnboardingStep,
   previousOnboardingStep,
+  updateBaby,
   updateBabyDraft,
 } from "../../store/slices/babySlice";
 
@@ -33,15 +35,28 @@ export default function OnboardingPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const { step, draft } = useAppSelector((state) => state.babies.onboarding);
+  const { mode, step, draft } = useAppSelector(
+    (state) => state.babies.onboarding,
+  );
+  const activeBabyId = useAppSelector((state) => state.babies.activeBabyId);
 
   const registrationDraft = useAppSelector(
     (state) => state.auth.registrationDraft,
   );
 
+  // "create" (fresh signup) drives loading/error off authSlice, since it's
+  // registerAccount that's in flight. "add"/"restart" drive it off
+  // babySlice instead, since those call createBaby/updateBaby — there's no
+  // registration happening at all.
   const authStatus = useAppSelector((state) => state.auth.status);
-
   const authError = useAppSelector((state) => state.auth.error);
+  const babyStatus = useAppSelector((state) => state.babies.status);
+  const babyError = useAppSelector((state) => state.babies.error);
+
+  const isSubmitting =
+    mode === "create" ? authStatus === "loading" : babyStatus === "loading";
+
+  const submitError = mode === "create" ? authError : babyError;
 
   const progress = ((step + 1) / stepLabels.length) * 100;
 
@@ -62,15 +77,44 @@ export default function OnboardingPage() {
   })();
 
   const handleFinish = async () => {
-    if (!registrationDraft) {
-      navigate("/register", {
-        replace: true,
-      });
-
-      return;
-    }
-
     try {
+      if (mode === "add") {
+        await dispatch(createBaby(draft)).unwrap();
+
+        navigate("/", { replace: true });
+        return;
+      }
+
+      if (mode === "restart") {
+        if (!activeBabyId) {
+          // Nothing to update against — shouldn't normally happen, since
+          // startOnboarding("restart") requires an existing activeBabyId.
+          navigate("/", { replace: true });
+          return;
+        }
+
+        await dispatch(
+          updateBaby({
+            babyId: activeBabyId,
+            changes: {
+              name: draft.name.trim(),
+              gender: draft.gender || undefined,
+              dateOfBirth: draft.dateOfBirth,
+              feedingMethod: draft.feedingMethod || undefined,
+            },
+          }),
+        ).unwrap();
+
+        navigate("/", { replace: true });
+        return;
+      }
+
+      // mode === "create" — first-time signup, needs the registration draft.
+      if (!registrationDraft) {
+        navigate("/register", { replace: true });
+        return;
+      }
+
       await dispatch(
         registerAccount({
           email: registrationDraft.email,
@@ -91,19 +135,10 @@ export default function OnboardingPage() {
       ).unwrap();
 
       dispatch(finishOnboarding());
-
-      navigate("/", {
-        replace: true,
-      });
-
-      dispatch(finishOnboarding());
-
-      navigate("/", {
-        replace: true,
-      });
+      navigate("/", { replace: true });
     } catch {
-      // The rejected request message is stored
-      // in state.auth.error.
+      // The rejected request message is stored in state.auth.error or
+      // state.babies.error, depending on mode — surfaced via submitError.
     }
   };
 
@@ -120,7 +155,10 @@ export default function OnboardingPage() {
     dispatch(nextOnboardingStep());
   };
 
-  if (!registrationDraft) {
+  // Only first-time signup depends on a registration draft. "add" and
+  // "restart" operate on an already-authenticated user and skip straight
+  // to the baby-details steps below.
+  if (mode === "create" && !registrationDraft) {
     return (
       <Box
         sx={{
@@ -171,6 +209,9 @@ export default function OnboardingPage() {
     );
   }
 
+  const pageTitle =
+    mode === "restart" ? `Update ${draft.name || "your baby"}'s details` : null;
+
   return (
     <Box
       sx={{
@@ -214,7 +255,7 @@ export default function OnboardingPage() {
             />
           </Box>
 
-          {authError && <Alert severity="error">{authError}</Alert>}
+          {submitError && <Alert severity="error">{submitError}</Alert>}
 
           {step === 0 && (
             <Stack spacing={3}>
@@ -225,7 +266,7 @@ export default function OnboardingPage() {
                     fontWeight: 700,
                   }}
                 >
-                  Tell us about your baby
+                  {pageTitle ?? "Tell us about your baby"}
                 </Typography>
 
                 <Typography
@@ -396,7 +437,7 @@ export default function OnboardingPage() {
             <Button
               variant="outlined"
               onClick={() => dispatch(previousOnboardingStep())}
-              disabled={step === 0 || authStatus === "loading"}
+              disabled={step === 0 || isSubmitting}
             >
               Back
             </Button>
@@ -404,10 +445,14 @@ export default function OnboardingPage() {
             <Button
               variant="contained"
               onClick={handleNext}
-              disabled={!canContinue || authStatus === "loading"}
+              disabled={!canContinue || isSubmitting}
             >
-              {authStatus === "loading"
-                ? "Creating account…"
+              {isSubmitting
+                ? mode === "create"
+                  ? "Creating account…"
+                  : mode === "restart"
+                    ? "Saving…"
+                    : "Adding baby…"
                 : step === stepLabels.length - 1
                   ? "Finish"
                   : "Continue"}
