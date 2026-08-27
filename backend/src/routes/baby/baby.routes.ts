@@ -4,6 +4,7 @@ import { inject, injectable } from "inversify";
 import type { Routes } from "../../types/routes.model";
 
 import { BabyService } from "../../service/baby/baby.service";
+import { AuthMiddleware } from "../../middlewares/auth/auth.middleware";
 
 @injectable()
 export class BabyRoutes implements Routes {
@@ -14,7 +15,12 @@ export class BabyRoutes implements Routes {
   constructor(
     @inject(BabyService)
     private readonly babyService: BabyService,
+
+    @inject(AuthMiddleware)
+    private readonly authMiddleware: AuthMiddleware,
   ) {
+    this.router.use(this.authMiddleware.middleware);
+
     this.initRoutes();
   }
 
@@ -29,25 +35,11 @@ export class BabyRoutes implements Routes {
   private getBabies(): void {
     this.router.get("/", async (req, res) => {
       try {
-        const userId = String(req.query.userId ?? "");
-
-        if (!userId) {
-          res.status(400).json({
-            message: "userId is required.",
-          });
-
-          return;
-        }
-
-        const babies = await this.babyService.getAll(userId);
-
+        const babies = await this.babyService.getAll(req.userId);
         res.json(babies);
       } catch (error) {
         console.error(error);
-
-        res.status(500).json({
-          message: "Unable to get babies.",
-        });
+        res.status(500).json({ message: "Unable to get babies." });
       }
     });
   }
@@ -55,23 +47,20 @@ export class BabyRoutes implements Routes {
   private getBaby(): void {
     this.router.get("/:babyId", async (req, res) => {
       try {
-        const baby = await this.babyService.getById(req.params.babyId);
+        const baby = await this.babyService.getById(
+          req.userId,
+          req.params.babyId,
+        );
 
         if (!baby) {
-          res.status(404).json({
-            message: "Baby not found.",
-          });
-
+          res.status(404).json({ message: "Baby not found." });
           return;
         }
 
         res.json(baby);
       } catch (error) {
         console.error(error);
-
-        res.status(500).json({
-          message: "Unable to get baby.",
-        });
+        res.status(500).json({ message: "Unable to get baby." });
       }
     });
   }
@@ -79,19 +68,17 @@ export class BabyRoutes implements Routes {
   private createBaby(): void {
     this.router.post("/", async (req, res) => {
       try {
-        const { userId, name, dateOfBirth, gender, feedingMethod } = req.body;
+        const { name, dateOfBirth, gender, feedingMethod } = req.body;
 
-        if (!userId || !name || !dateOfBirth || !gender || !feedingMethod) {
+        if (!name || !dateOfBirth || !gender || !feedingMethod) {
           res.status(400).json({
             message:
-              "userId, name, dateOfBirth, gender and feedingMethod are required.",
+              "name, dateOfBirth, gender and feedingMethod are required.",
           });
-
           return;
         }
 
-        const baby = await this.babyService.create({
-          userId,
+        const baby = await this.babyService.create(req.userId, {
           name,
           dateOfBirth,
           gender,
@@ -101,10 +88,7 @@ export class BabyRoutes implements Routes {
         res.status(201).json(baby);
       } catch (error) {
         console.error(error);
-
-        res.status(500).json({
-          message: "Unable to create baby.",
-        });
+        res.status(500).json({ message: "Unable to create baby." });
       }
     });
   }
@@ -112,23 +96,21 @@ export class BabyRoutes implements Routes {
   private updateBaby(): void {
     this.router.patch("/:babyId", async (req, res) => {
       try {
-        const baby = await this.babyService.update(req.params.babyId, req.body);
+        const baby = await this.babyService.update(
+          req.userId,
+          req.params.babyId,
+          req.body,
+        );
 
         if (!baby) {
-          res.status(404).json({
-            message: "Baby not found.",
-          });
-
+          res.status(404).json({ message: "Baby not found." });
           return;
         }
 
         res.json(baby);
       } catch (error) {
         console.error(error);
-
-        res.status(500).json({
-          message: "Unable to update baby.",
-        });
+        res.status(500).json({ message: "Unable to update baby." });
       }
     });
   }
@@ -136,23 +118,20 @@ export class BabyRoutes implements Routes {
   private deleteBaby(): void {
     this.router.delete("/:babyId", async (req, res) => {
       try {
-        const deleted = await this.babyService.delete(req.params.babyId);
+        const deleted = await this.babyService.delete(
+          req.userId,
+          req.params.babyId,
+        );
 
         if (!deleted) {
-          res.status(404).json({
-            message: "Baby not found.",
-          });
-
+          res.status(404).json({ message: "Baby not found." });
           return;
         }
 
         res.status(204).send();
       } catch (error) {
         console.error(error);
-
-        res.status(500).json({
-          message: "Unable to delete baby.",
-        });
+        res.status(500).json({ message: "Unable to delete baby." });
       }
     });
   }

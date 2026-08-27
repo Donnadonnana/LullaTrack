@@ -10,19 +10,20 @@ import type {
 
 @injectable()
 export class BabyService {
-  private readonly collectionName = "babies";
-
   constructor(
     @inject(FirebaseAdminService)
     private readonly firebaseAdminService: FirebaseAdminService,
   ) {}
 
-  public async getAll(userId: string): Promise<Baby[]> {
-    const snapshot = await this.firebaseAdminService.db
+  private babiesCollection(userId: string) {
+    return this.firebaseAdminService.db
       .collection("users")
       .doc(userId)
-      .collection("babies")
-      .get();
+      .collection("babies");
+  }
+
+  public async getAll(userId: string): Promise<Baby[]> {
+    const snapshot = await this.babiesCollection(userId).get();
 
     return snapshot.docs.map((document) => ({
       id: document.id,
@@ -30,11 +31,8 @@ export class BabyService {
     })) as Baby[];
   }
 
-  public async getById(babyId: string): Promise<Baby | null> {
-    const snapshot = await this.firebaseAdminService.db
-      .collection(this.collectionName)
-      .doc(babyId)
-      .get();
+  public async getById(userId: string, babyId: string): Promise<Baby | null> {
+    const snapshot = await this.babiesCollection(userId).doc(babyId).get();
 
     if (!snapshot.exists) {
       return null;
@@ -46,29 +44,30 @@ export class BabyService {
     } as Baby;
   }
 
-  public async create(data: CreateBabyRequest): Promise<Baby> {
-    const reference = this.firebaseAdminService.db
-      .collection(this.collectionName)
-      .doc();
+  public async create(
+    userId: string,
+    data: Omit<CreateBabyRequest, "userId">,
+  ): Promise<Baby> {
+    const reference = this.babiesCollection(userId).doc();
 
     const timestamp = this.firebaseAdminService.fieldValue.serverTimestamp();
 
     await reference.set({
       ...data,
+      userId,
       createdAt: timestamp,
       updatedAt: timestamp,
     });
 
-    return (await this.getById(reference.id)) as Baby;
+    return (await this.getById(userId, reference.id)) as Baby;
   }
 
   public async update(
+    userId: string,
     babyId: string,
     data: UpdateBabyRequest,
   ): Promise<Baby | null> {
-    const reference = this.firebaseAdminService.db
-      .collection(this.collectionName)
-      .doc(babyId);
+    const reference = this.babiesCollection(userId).doc(babyId);
 
     const existingBaby = await reference.get();
 
@@ -81,13 +80,11 @@ export class BabyService {
       updatedAt: this.firebaseAdminService.fieldValue.serverTimestamp(),
     });
 
-    return this.getById(babyId);
+    return this.getById(userId, babyId);
   }
 
-  public async delete(babyId: string): Promise<boolean> {
-    const reference = this.firebaseAdminService.db
-      .collection(this.collectionName)
-      .doc(babyId);
+  public async delete(userId: string, babyId: string): Promise<boolean> {
+    const reference = this.babiesCollection(userId).doc(babyId);
 
     const existingBaby = await reference.get();
 
