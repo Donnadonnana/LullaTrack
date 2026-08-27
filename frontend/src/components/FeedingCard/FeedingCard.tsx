@@ -5,22 +5,12 @@ import BottleFeedingCard from "./BottleFeedingCard";
 
 type FeedingCardProps = {
   log: FeedingLog;
-  onUpdate: (changes: Partial<FeedingLog>) => void;
-  onDelete: () => void;
 };
 
-export default function FeedingCard({
-  log,
-  onUpdate,
-  onDelete,
-}: FeedingCardProps) {
+export default function FeedingCard({ log }: FeedingCardProps) {
   if (log.type === "breastfeeding") {
-    return (
-      <BreastfeedingCard log={log} onUpdate={onUpdate} onDelete={onDelete} />
-    );
+    return <BreastfeedingCard log={log} />;
   }
 
-  return (
-    <BottleFeedingCard log={log} onUpdate={onUpdate} onDelete={onDelete} />
-  );
+  return <BottleFeedingCard log={log} />;
 }

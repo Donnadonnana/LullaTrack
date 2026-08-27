@@ -3,8 +3,11 @@ import { useState } from "react";
 
 import {
   Box,
+  Button,
   Card,
   CardContent,
+  Chip,
+  CircularProgress,
   Collapse,
   IconButton,
   Stack,
@@ -24,10 +27,12 @@ type FeedingCardShellProps = {
   icon: ReactNode;
   accent: string;
   accentTint: string;
-  /** Shown next to the title when collapsed. Null hides the summary row. */
   summary: ReactNode;
-  /** Starts expanded when the log is still missing key details. */
   isComplete: boolean;
+  hasChanges: boolean;
+  isSaving: boolean;
+  isDeleting: boolean;
+  onSave: () => void;
   onDelete: () => void;
   children: ReactNode;
 };
@@ -39,6 +44,10 @@ export default function FeedingCardShell({
   accentTint,
   summary,
   isComplete,
+  hasChanges,
+  isSaving,
+  isDeleting,
+  onSave,
   onDelete,
   children,
 }: FeedingCardShellProps) {
@@ -120,6 +129,19 @@ export default function FeedingCardShell({
               spacing={0.5}
               sx={{ alignItems: "center", flexShrink: 0 }}
             >
+              {hasChanges && (
+                <Chip
+                  label="Unsaved"
+                  size="small"
+                  sx={{
+                    bgcolor: nursery.sunTint,
+                    color: nursery.sun,
+                    fontWeight: 700,
+                    border: "none",
+                  }}
+                />
+              )}
+
               <Tooltip title={isExpanded ? "Collapse" : "Edit"}>
                 <IconButton
                   size="small"
@@ -137,17 +159,44 @@ export default function FeedingCardShell({
               <Tooltip title="Delete">
                 <IconButton
                   size="small"
+                  disabled={isDeleting}
                   onClick={onDelete}
                   sx={{ color: nursery.rose }}
                 >
-                  <DeleteOutlineRoundedIcon fontSize="small" />
+                  {isDeleting ? (
+                    <CircularProgress size={18} sx={{ color: nursery.rose }} />
+                  ) : (
+                    <DeleteOutlineRoundedIcon fontSize="small" />
+                  )}
                 </IconButton>
               </Tooltip>
             </Stack>
           </Stack>
 
           <Collapse in={isExpanded} unmountOnExit>
-            {children}
+            <Stack spacing={2}>
+              {children}
+
+              <Stack direction="row" sx={{ justifyContent: "flex-end" }}>
+                <Button
+                  disableElevation
+                  variant="contained"
+                  disabled={!hasChanges || isSaving || isDeleting}
+                  onClick={onSave}
+                  startIcon={
+                    isSaving ? (
+                      <CircularProgress size={16} sx={{ color: "#fff" }} />
+                    ) : undefined
+                  }
+                  sx={{
+                    bgcolor: accent,
+                    "&:hover": { bgcolor: accent, filter: "brightness(0.92)" },
+                  }}
+                >
+                  {isSaving ? "Saving…" : "Save"}
+                </Button>
+              </Stack>
+            </Stack>
           </Collapse>
         </Stack>
       </CardContent>
